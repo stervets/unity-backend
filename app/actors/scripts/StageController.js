@@ -15,11 +15,11 @@ var a = function () {
 a();
 
 */
-console.log('CREATE ScriptDrivenCharacterFemale');
-create('ScriptDrivenCharacterFemale', 'FemaleController', {
+
+var femaleId = create('CharacterFemale', 'CharacterFemale', {
     x: 0,
     y: 0,
     z: 0,
     angle: 0
 });
-console.log('DONE');
+console.log("Female crated. ActorId:", femaleId);

@@ -16,7 +16,9 @@ module.exports = Backbone.Model.extend({
     },
 
     handlers: {
-        'destroy': 'onDestroy'
+        'destroy': 'onDestroy',
+        'actors.add': 'onActorAdd',
+        'actors.remove': 'onActorRemove'
     },
 
     setMaster(client) {
@@ -49,7 +51,24 @@ module.exports = Backbone.Model.extend({
     },
 
     addPlayer(options) {
-        this.players.add(options);
+        return this.players.add(options);
+    },
+
+    addActor(options, playerId) {
+        var player = this.players.get(playerId);
+        var actor    = player.actors.add(_.extend(options, {
+            playerId: player.id
+        }));
+        actor.player = player;
+        return actor.id;
+    },
+
+    onActorAdd(actor) {
+        //this.send('unity', 0, )
+    },
+
+    onActorRemove() {
+
     },
 
     removeClient(client) {
@@ -72,10 +91,10 @@ module.exports = Backbone.Model.extend({
         }
     },
 
-    send(clientType, actorId, data) {
+    send(clientType, actorId, com, vars) {
         return new Promise((resolve)=>{
-            this.application.sendRoomQuery(`${this.id}-${clientType}`, actorId, data, ()=>{
-
+            this.application.sendRoomQuery(`${this.id}-${clientType}`, actorId, com, vars, ()=>{
+                console.log('CALLBACK');
             });
         });
     },
@@ -94,8 +113,13 @@ module.exports = Backbone.Model.extend({
     },
 
     launch(){
-        this.addPlayer({
+        var player = this.addPlayer({
             isRoot: true
+        });
+
+        player.addActor({
+            prefabName: "StageController",
+            scriptName: "StageController"
         });
     }
 });

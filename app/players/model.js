@@ -28,16 +28,9 @@ module.exports = Backbone.Model.extend({
     },
 
     addActor(options) {
-        var actor    = this.actors.add(_.extend(options, {
-            playerId: this.id
-        }));
-        actor.player = this;
+        return this.room.addActor(options, this.id);
     },
 
     launch() {
-        this.get('isRoot') && this.addActor({
-            prefabName: "StageController",
-            scriptName: "StageController"
-        });
     }
 });

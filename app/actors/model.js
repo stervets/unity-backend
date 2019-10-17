@@ -19,15 +19,18 @@ module.exports = Backbone.Model.extend({
 
     workerHandlers: {
         create(prefabName, scriptName, position) {
-            this.player.addActor({
-                prefabName, scriptName,
-                angle   : position.angle,
-                position: {
-                    x: position.x,
-                    y: position.y,
-                    z: position.z,
-                }
-            });
+            var params  = {
+                    prefabName, scriptName,
+                    position: {
+                        x: position.x,
+                        y: position.y,
+                        z: position.z,
+                    },
+                    angle   : position.angle
+                },
+                actorId = this.player.addActor(params);
+            this.room.send('unity', this.id, 'create', params);
+            return actorId;
         }
     },
 
