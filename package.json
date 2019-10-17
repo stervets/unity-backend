@@ -1,0 +1,22 @@
+{
+  "name": "unity-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --inspect ./index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "JS-Interpreter": "https://github.com/NeilFraser/JS-Interpreter.git",
+    "acorn": "^6.2.1",
+    "backbone": "^1.4.0",
+    "backbone-initialize": "https://github.com/stervets/backbone-initialize.git",
+    "backbone.radio": "^2.0.0",
+    "express": "^4.17.1",
+    "lodash": "^4.17.15",
+    "socket.io": "^2.2.0"
+  }
+}
