@@ -16,9 +16,10 @@ module.exports = Backbone.Model.extend({
     },
 
     async syncUnityClient() {
-        await this.send('create', this.room.static.toJSON());
+        //await this.send('create', this.room.static.toJSON());
+        console.log('SYNC', JSON.stringify(this.room.actors.toJSON(), null, 4));
         await this.send('create', this.room.actors.toJSON());
-        this.send('run');
+        await this.send('run');
     },
 
     start() {

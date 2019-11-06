@@ -9,7 +9,7 @@ module.exports = Backbone.Model.extend({
         'radio.channel.app.destroy:client': 'onDestroyClient'
     },
 
-    roomCallbacks: {},
+    //roomCallbacks: {},
 
     socketHandlers: {
         RegisterClient(socket, client) {
@@ -53,21 +53,27 @@ module.exports = Backbone.Model.extend({
             if (client) {
                 client.destroy();
                 client.room.removeClient(client);
-                //this.clients.remove(client);
             }
             console.log(`Socket ${socket.id} disconnected`);
         },
 
         ServerLog(socket, data) {
             var client = this.clients.get(socket.id);
-            console.log(`${client.socketRoom} (${client.id})`, data);
+            console.log(`#log ${client.socketRoom} (${client.id})>`, data);
         },
 
         a(socket, data) {
+            var client = this.clients.get(socket.id);
             if (data.id) {
-                console.log("response", data);
+                if (client.room.clients[client.get('type')].master == client) {
+                    var actor = client.room.actors.get(data.id);
+                    if (actor) {
+                        data.transform && actor.set('transform', data.transform);
+                        data.state && actor.set('state', data.state);
+                        actor.resolve && actor.resolve(data.res);
+                    }
+                }
             } else {
-                var client = this.clients.get(socket.id);
                 client && client.resolve && client.resolve(data.res);
             }
         }
@@ -85,12 +91,14 @@ module.exports = Backbone.Model.extend({
     },
 
     sendRoomQuery(socketRoom, actorId, com, vars, callback) {
-        this.roomCallbacks[`${socketRoom}-${actorId}`] = callback;
-        this.io.to(socketRoom).emit('q', {
+        var data = {
             id: actorId,
             com,
             vars
-        });
+        };
+        //console.log('send to', socketRoom,  data);
+        this.io.to(socketRoom).emit('q', data);
+        //this.roomCallbacks[`${socketRoom}-${actorId}`] = { ...data, callback };
     },
 
     /*

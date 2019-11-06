@@ -6,6 +6,18 @@ module.exports = function () {
             }
         },
 
+        async getId(data, resolve, reject, interpreter) {
+            resolve(await this.postMessage('getId'));
+        },
+
+        random(data, resolve, reject, interpreter) {
+            if (!data[1]) {
+                data[1] = data[0];
+                data[0] = 0;
+            }
+            resolve(Math.random() * (data[1] - data[0]) + data[0]);
+        },
+
         setTimeout(data, resolve, reject, interpreter) {
             setTimeout(resolve, 0, setTimeout(() => {
                 runCallback(interpreter, data[0]);
@@ -14,6 +26,10 @@ module.exports = function () {
 
         clearTimeout(data, resolve, reject, interpreter) {
             resolve(clearTimeout(data[0]));
+        },
+
+        wait(data, resolve, reject, interpreter) {
+            setTimeout(resolve, data[0]);
         }
     }
 };

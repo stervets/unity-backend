@@ -91,11 +91,10 @@ module.exports = Backbone.Model.extend({
         }
     },
 
-    send(clientType, actorId, com, vars) {
+    send(clientType, actor, com, vars) {
         return new Promise((resolve)=>{
-            this.application.sendRoomQuery(`${this.id}-${clientType}`, actorId, com, vars, ()=>{
-                console.log('CALLBACK');
-            });
+            actor.resolve = resolve;
+            this.application.sendRoomQuery(`${this.id}-${clientType}`, actor.id, com, vars);
         });
     },
 
