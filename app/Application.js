@@ -36,7 +36,6 @@ module.exports = Backbone.Model.extend({
             socket.join(clientModel.socketRoom);
 
             clientModel.start();
-
             /*
              this.sendQuery(clientModel, 0, 'create', {
              name : 'ScriptDrivenCharacterFemale',
@@ -58,15 +57,26 @@ module.exports = Backbone.Model.extend({
         },
 
         ServerLog(socket, data) {
+            //var client = this.clients.get(socket.id);
+            console.log(`#log>`, data);
+        },
+
+        RunScript(socket, data){
             var client = this.clients.get(socket.id);
-            console.log(`#log ${client.socketRoom} (${client.id})>`, data);
+            if (client){
+                var actor = client.room.actors.get(data.id);
+                if (actor) {
+                    actor.runScript(data.data);
+                }
+            }
         },
 
         a(socket, data) {
             var client = this.clients.get(socket.id);
-            if (data.id) {
+            if (data.id && client) {
                 if (client.room.clients[client.get('type')].master == client) {
                     var actor = client.room.actors.get(data.id);
+                    //console.log('ACTOR', actor);
                     if (actor) {
                         data.transform && actor.set('transform', data.transform);
                         data.state && actor.set('state', data.state);
@@ -96,7 +106,6 @@ module.exports = Backbone.Model.extend({
             com,
             vars
         };
-        //console.log('send to', socketRoom,  data);
         this.io.to(socketRoom).emit('q', data);
         //this.roomCallbacks[`${socketRoom}-${actorId}`] = { ...data, callback };
     },
@@ -129,7 +138,7 @@ module.exports = Backbone.Model.extend({
                 this.socketHandlers[handlerName].call(this, socket, ...attrs);
             });
         });
-        socket.emit("Handshake");
+        socket.emit("Handshake", {});
     },
 
     launch(opts) {

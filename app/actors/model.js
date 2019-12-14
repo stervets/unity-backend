@@ -7,6 +7,7 @@ module.exports = Backbone.Model.extend({
         playerId  : '',
         prefabName: '',
         scriptName: '',
+        script    : '',
 
         transform: {
             position: { x: 0, y: 0, z: 0 },
@@ -23,7 +24,19 @@ module.exports = Backbone.Model.extend({
     },
 
     dataValidators: {
-        create(prefabName, scriptName, x, y, z, angle) {
+        create(prefabName, x, y, z, angle) {
+            return {
+                name    : prefabName,
+                position: {
+                    x    : x || 0,
+                    y    : y || 0,
+                    z    : z || 0,
+                    angle: angle || 0
+                }
+            };
+        },
+
+        createStatic(prefabName, scriptName, x, y, z, angle) {
             return {
                 name    : prefabName,
                 scriptName,
@@ -43,13 +56,36 @@ module.exports = Backbone.Model.extend({
         },
 
         async create(params) {
-            var result = await this.room.send('unity', this, 'create', params);
+            var result = await this.room.send('unity', this, 'create', params),
+                id     = null;
+
+            if (result && result.id) {
+                id        = result &&
+                            result.id &&
+                            this.player.addActor({
+                                id        : result.id,
+                                prefabName: params.name,
+                                //scriptName: params.scriptName,
+                                script    : '',
+                                transform : {
+                                    position: result.position,
+                                    rotation: result.rotation
+                                }
+                            }) || null;
+                params.id = id;
+                this.room.send('editor', this, 'create', params);
+            }
+
+            return id;
+        },
+
+        async createStatic(params) {
+            var result = await this.room.send('unity', this, 'createStatic', params);
             var id     = result &&
                          result.id &&
-                         this.player.addActor({
+                         this.room.addStatic({
                              id        : result.id,
                              prefabName: params.name,
-                             scriptName: params.scriptName,
                              transform : {
                                  position: result.position,
                                  rotation: result.rotation
@@ -68,15 +104,19 @@ module.exports = Backbone.Model.extend({
     },
 
     async onChangeScriptName() {
-        this.script = await loadScript(this.get('scriptName'));
-        this.player.get('isRoot') && this.runScript();
+        var scriptName = this.get('scriptName');
+        if (scriptName) {
+            this.script = await loadScript(scriptName);
+            this.player.get('isRoot') && this.runScript();
+        }
     },
 
     postMessage(com, data) {
         this.worker.postMessage({ com, data });
     },
 
-    runScript() {
+    runScript(script) {
+        script != null  && (this.script = script);
         this.script = this.script.trim();
         if (this.script) {
             this.postMessage('runScript', {

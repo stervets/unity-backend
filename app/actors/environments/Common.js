@@ -1,5 +1,12 @@
 module.exports = function () {
     return {
+        DIRECTION: {
+            RIGHT: 0,
+            DOWN: 1,
+            LEFT: 2,
+            UP: 3
+        },
+
         console: {
             log: function (data, resolve) {
                 resolve(console.log.apply(console, getParams(data)));

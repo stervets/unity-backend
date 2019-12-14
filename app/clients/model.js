@@ -16,13 +16,18 @@ module.exports = Backbone.Model.extend({
     },
 
     async syncUnityClient() {
-        //await this.send('create', this.room.static.toJSON());
-        console.log('SYNC', JSON.stringify(this.room.actors.toJSON(), null, 4));
+        //await this.send('createStatic', this.room.static.toJSON());
+        //console.log('SYNC', JSON.stringify(this.room.actors.toJSON(), null, 4));
         await this.send('create', this.room.actors.toJSON());
         await this.send('run');
     },
 
+    async syncEditorClient() {
+        await this.send('scripts', this.room.actors.toJSON());
+    },
+
     start() {
         this.get('type') == 'unity' && this.syncUnityClient();
+        this.get('type') == 'editor' && this.syncEditorClient();
     }
 });

@@ -63,6 +63,10 @@ module.exports = Backbone.Model.extend({
         return actor.id;
     },
 
+    addStatic(options){
+        console.log('add static OPTIONS', options);
+    },
+
     onActorAdd(actor) {
         //this.send('unity', 0, )
     },
@@ -118,7 +122,8 @@ module.exports = Backbone.Model.extend({
 
         player.addActor({
             prefabName: "StageController",
-            scriptName: "StageController"
+            //scriptName: "StageController"
+            script: "create('CharacterFemale', 0, 0, 0, 0);"
         });
     }
 });
