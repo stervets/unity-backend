@@ -1,4 +1,4 @@
-global.acorn             = require('JS-Interpreter/acorn');
+global.acorn             = require('../../vendor/JS-Interpreter/acorn');
 global._                 = require("lodash");
 
 global.runCallback = (interpreter, callback, ...attrs)=>{
