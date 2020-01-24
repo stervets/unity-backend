@@ -5,7 +5,7 @@ var express = require('express'),
 app.use(express.static(__dirname + "/public"));
 
 app.use("/", (request, response) => {
-    response.send("<pre>codify unity backend</pre>");
+    response.send("<pre>Сodify unity server</pre>");
 });
 
 app.listen(8080);

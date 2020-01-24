@@ -1,13 +1,10 @@
 var Clients = require('../clients/collection'),
-    Players = require('../players/collection'),
-    Actors  = require('../actors/collection'),
-    Static  = require('../actors/static/collection');
+    Actors  = require('../actors/collection');
 
-var id = 0;
 module.exports = Backbone.Model.extend({
-    clients: null,
-    players: null,
-    actors : null,
+    clients    : null,
+    actors     : null,
+    unityClient: null,
 
     prepare: ['initCollections'],
 
@@ -16,55 +13,32 @@ module.exports = Backbone.Model.extend({
     },
 
     handlers: {
-        'destroy': 'onDestroy',
-        'actors.add': 'onActorAdd',
+        'destroy'      : 'onDestroy',
+        'actors.add'   : 'onActorAdd',
         'actors.remove': 'onActorRemove'
-    },
-
-    setMaster(client) {
-        var type = client.get('type');
-        !this.clients[type].master &&
-        this.clients[type].clients.length &&
-        (this.clients[type].master = this.clients[type].clients.first());
     },
 
     addClient(client) {
         var type = client.get('type');
-        !this.clients[type] && (this.clients[type] = {
-            clients: new Clients(),
-            master : null
-        });
-        var addedCliend  = this.clients[type].clients.add(client);
-        addedCliend.room = this;
-        this.setMaster(client);
+        !this.clients[type] && (this.clients[type] = new Clients()),
+            isUnityClient = type == 'unity';
 
-        if (this.get('destroyIfEmpty')) {
-            var destroy = true;
-            for (let key in this.clients) {
-                if (this.clients[key].clients.length) {
-                    destroy = false;
-                    break;
-                }
+        if (isUnityClient) {
+            if (this.unityClient) {
+                this.unityClient.socket.disconnect();
+                this.unityClient.destroy();
             }
-            destroy && this.destroy();
         }
-    },
 
-    addPlayer(options) {
-        return this.players.add(options);
+        var addedCliend  = this.clients[type].add(client);
+        addedCliend.room = this;
+
+        isUnityClient && (this.unityClient = addedCliend);
     },
 
     addActor(options, playerId) {
-        var player = this.players.get(playerId);
-        var actor    = player.actors.add(_.extend(options, {
-            playerId: player.id
-        }));
-        actor.player = player;
+        var actor = this.actors.add(_.extend(options, {}));
         return actor.id;
-    },
-
-    addStatic(options){
-        console.log('add static OPTIONS', options);
     },
 
     onActorAdd(actor) {
@@ -76,27 +50,37 @@ module.exports = Backbone.Model.extend({
     },
 
     removeClient(client) {
-        var type = client.get('type');
-        !this.clients[type].clients.length && (this.clients[type].master = null);
-        this.setMaster(client);
+        var destroy = true;
+        for (let key in this.clients) {
+            if (this.clients[key].length) {
+                console.log('FOUND CLIENT', this.clients.toJSON());
+                destroy = false;
+                break;
+            }
+        }
+
+        if (destroy) {
+            console.log('ROOM DESTROYED');
+        }
+        destroy && this.destroy();
     },
 
     onDestroy() {
         for (let key in this.clients) {
-            if (this.clients[key].clients.length) {
-                while (this.clients[key].clients.length) {
-                    this.clients[key].clients.first().destroy();
+            if (this.clients[key].length) {
+                while (this.clients[key].length) {
+                    this.clients[key].first().destroy();
                 }
             }
         }
 
-        while (this.players.length) {
-            this.players.first().destroy();
+        while (this.actors.length) {
+            this.actors.first().destroy();
         }
     },
 
     send(clientType, actor, com, vars) {
-        return new Promise((resolve)=>{
+        return new Promise((resolve) => {
             actor.resolve = resolve;
             this.application.sendRoomQuery(`${this.id}-${clientType}`, actor.id, com, vars);
         });
@@ -106,24 +90,6 @@ module.exports = Backbone.Model.extend({
         this.clients = {};
         this.actors  = new Actors([], {
             room: this
-        });
-        this.static  = new Static([], {
-            room: this
-        });
-        this.players = new Players([], {
-            room: this
-        });
-    },
-
-    launch(){
-        var player = this.addPlayer({
-            isRoot: true
-        });
-
-        player.addActor({
-            prefabName: "StageController",
-            //scriptName: "StageController"
-            script: "create('CharacterFemale', 0, 0, 0, 0);"
         });
     }
 });

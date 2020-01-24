@@ -1,32 +1,32 @@
-global.acorn             = require('../../vendor/JS-Interpreter/acorn');
-global._                 = require("lodash");
+global.acorn = require('../../vendor/JS-Interpreter/acorn');
+global._     = require("lodash");
 
-global.runCallback = (interpreter, callback, ...attrs)=>{
-    if (!(interpreter && interpreter.stateStack)){
+global.runCallback = (interpreter, callback, ...attrs) => {
+    if (!(interpreter && interpreter.stateStack)) {
         console.log("Run callback: NO INTERPRETER!");
     }
-    if (!callback){
+    if (!callback) {
         console.log("Run callback: NO CALLBACK!");
         return;
     }
 
-    var params = JSON.stringify(attrs);
-    params = params.substr(1, params.length-2);
+    var params  = JSON.stringify(attrs);
+    params      = params.substr(1, params.length - 2);
     var program = acorn.parse(`(function(){})(${params});`);
     _.extend(program, {
-        end: callback.node.end,
+        end  : callback.node.end,
         start: callback.node.start,
         scope: callback.parentScope
     });
 
     _.extend(program.body[0], {
-        end: callback.node.end,
+        end  : callback.node.end,
         start: callback.node.start
     });
 
     _.extend(program.body[0].expression, {
-        end: callback.node.end-1,
-        start: callback.node.start,
+        end   : callback.node.end - 1,
+        start : callback.node.start,
         callee: callback.node
     });
 
@@ -35,18 +35,18 @@ global.runCallback = (interpreter, callback, ...attrs)=>{
     shouldRun && interpreter.run();
 };
 
-global.runFunction = (interpreter, func, ...attrs)=>{
-    if (!(interpreter && interpreter.stateStack)){
+global.runFunction = (interpreter, func, ...attrs) => {
+    if (!(interpreter && interpreter.stateStack)) {
         console.log("Run callback: NO INTERPRETER!");
     }
-    if (!func){
+    if (!func) {
         console.log("Run callback: NO CALLBACK!");
         return;
     }
 
-    var params = JSON.stringify(attrs);
-    params = params.substr(1, params.length-2);
-    var program = acorn.parse(`${func}(${params});`);
+    var params    = JSON.stringify(attrs);
+    params        = params.substr(1, params.length - 2);
+    var program   = acorn.parse(`${func}(${params});`);
     var shouldRun = interpreter.stateStack[0].done;
     interpreter.appendCode(program);
     shouldRun && interpreter.run();
@@ -54,7 +54,7 @@ global.runFunction = (interpreter, func, ...attrs)=>{
 
 var staticInterpreter = null;
 
-global.getParams = (data)=>{
+global.getParams = (data) => {
     return data.map((dataItem) => {
         return staticInterpreter.pseudoToNative(dataItem);
     });
@@ -90,7 +90,7 @@ var Worker = {
         },
 
         runScript(data) {
-            var environment  = environmentsConfig[data.environment] ? registerEnvironment(environmentsConfig[data.environment]) : _.identity;
+            var environment   = environmentsConfig[data.environment] ? registerEnvironment(environmentsConfig[data.environment]) : _.identity;
             staticInterpreter = new JSInterpreter.Interpreter(data.script, environment);
             staticInterpreter.run();
         }
@@ -109,8 +109,6 @@ const registerEnvironment = function (environment) {
                         typeof environment[name] == 'function' ?
                         interpreter.createAsyncFunction(function (...attrs) {
                             const callback = attrs.pop();
-                            //console.log(attrs[0]);
-                            //console.log(interpreter.pseudoToNative(attrs[0]));
                             environment[name].call(Worker, attrs, callback, (message) => {
                                 //TODO: Make reject handler (throwException in interpreter?)
                                 console.warn('Script execution error:', message);

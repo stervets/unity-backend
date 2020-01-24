@@ -27,7 +27,7 @@ module.exports = Backbone.Model.extend({
     },
 
     start() {
-        this.get('type') == 'unity' && this.syncUnityClient();
-        this.get('type') == 'editor' && this.syncEditorClient();
+        //this.get('type') == 'unity' && this.syncUnityClient();
+        //this.get('type') == 'editor' && this.syncEditorClient();
     }
 });
