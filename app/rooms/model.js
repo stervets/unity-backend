@@ -36,8 +36,8 @@ module.exports = Backbone.Model.extend({
         isUnityClient && (this.unityClient = addedCliend);
     },
 
-    addActor(options, playerId) {
-        var actor = this.actors.add(_.extend(options, {}));
+    addActor(options) {
+        var actor = this.actors.add(options || {});
         return actor.id;
     },
 
@@ -91,5 +91,9 @@ module.exports = Backbone.Model.extend({
         this.actors  = new Actors([], {
             room: this
         });
+    },
+
+    launch(){
+        this.addActor();
     }
 });

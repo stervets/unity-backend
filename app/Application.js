@@ -42,7 +42,7 @@ module.exports = Backbone.Model.extend({
             socket.join(client.socketRoom);
 
             client.start();
-            console.log(`Client "${this.get('type')}" in room ${room.id} started`);
+            console.log(`Client "${client.get('type')}" in room ${room.id} started`);
             if (!room.id.indexOf('test')) {
                 room.isTest = true;
                 this.socketHandlers.setConfig.call(this, socket, TestUserConfig);

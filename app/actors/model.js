@@ -1,81 +1,138 @@
 const { Worker } = require('worker_threads');
 
-var id         = 0;
 module.exports = Backbone.Model.extend({
     interpreter: null,
     defaults   : {
-        scriptName: '',
-        script    : '',
-
-        transform: {
-            position: { x: 0, y: 0, z: 0 },
-            rotation: { x: 0, y: 0, z: 0 }
-        },
-
-        state  : null,
-        command: null
+        script: '',
     },
 
     handlers: {
-        'destroy'          : 'onDestroy'
+        //'destroy': 'onDestroy'
     },
 
-    dataValidators: {
-    },
+    dataValidators: {},
 
     workerHandlers: {
         getId() {
             return this.id;
+        },
+
+        callback(data, id) {
+            this.executeCallback(id, data);
         }
     },
 
-    commonWorkerHandler({ com, data }) {
-        return this.room.send('unity', this, com, data);
+    // commonWorkerHandler({ com, data }) {
+    //     return this.room.send('unity', this, com, data);
+    // },
+
+    // onDestroy() {
+    //     this.room.actors.remove(this);
+    // },
+
+    executeCallback(id, data) {
+        if (this.callbacks[id]) {
+            this.callbacks[id](data);
+            delete this.callbacks[id];
+        }
     },
 
-    onDestroy() {
-        this.room.actors.remove(this);
+    setCallback(resolve) {
+        var callbackId;
+        while (this.callbacks[(callbackId = Math.random())]) {
+        }
+        this.callbacks[callbackId] = resolve;
+        return callbackId;
     },
 
-    postMessage(com, data) {
+    request(com, data) {
+        return new Promise((resolve) => {
+            this.worker.postMessage({ com, data, id: this.setCallback(resolve) });
+        });
+    },
+
+    post(com, data) {
         this.worker.postMessage({ com, data });
     },
 
-    runScript(script) {
-        script != null  && (this.script = script);
-        this.script = this.script.trim();
-        if (this.script) {
-            this.postMessage('runScript', {
-                script     : this.script,
-                environment: this.get('prefabName')
-            });
-        } else {
-            console.log('Script is empty');
-        }
+    /*
+     runScript(script) {
+     script != null && (this.script = script);
+     this.script = this.script.trim();
+     if (this.script) {
+     this.postMessage('runScript', {
+     script: this.script,
+     //environment: {}
+     });
+     } else {
+     console.log('Script is empty');
+     }
+     },
+
+     compileScript(script) {
+     script != null && (this.script = script);
+     this.script = this.script.trim();
+     if (this.script) {
+     this.postMessage('compileScript', {
+     script: this.script
+     //environment: {}
+     });
+     } else {
+     console.log('Script is empty');
+     }
+     },
+     */
+
+    async onWorkerMessage(data, id) {
+        this.workerHandlers[data.com] && this.workerHandlers[data.com].call(this, data.data, data.id);
     },
 
-    async onWorkerMessage(data) {
-        var validatedData = this.dataValidators[data.com] ?
-                            this.dataValidators[data.com].apply(this, data.data) : data.data;
+    handleError(errorType, error) {
+        if (error) {
+            console.log(`${errorType} ERROR:`, error.message);
+            error.loc && console.log(error.loc);
+        } else {
+            console.log(errorType, 'FINISHED!!<<<<');
+        }
+        return error;
+    },
 
-        this.set('command', {
-            com : data.com,
-            data: validatedData
-        });
+    async testRun() {
+        var script = await loadScript('CharacterFemale');
 
-        var response = this.workerHandlers[data.com] ?
-                       await this.workerHandlers[data.com].apply(this, Array.isArray(validatedData) ? validatedData : [validatedData]) :
-                       await this.commonWorkerHandler.call(this, data);
-        this.set('command', null);
-        this.postMessage('response', response);
+        !this.handleError('COMPILE', await this.request('compile', { script })) &&
+        (() => {
+            setTimeout(() => {
+                console.log('PAUSE');
+                this.post('pause');
+            }, 1000);
+
+            setTimeout(() => {
+                console.log('RESUME');
+                this.post('resume');
+            }, 3000);
+
+            setTimeout(() => {
+                console.log('STOP');
+                this.post('stop');
+            }, 5000);
+            return true;
+        })() &&
+        this.handleError('RUNTIME', await this.request('run'));
+
+        setTimeout(async () => {
+            console.log('RUN');
+            this.handleError('RUNTIME', await this.request('run'));
+        }, 1000);
     },
 
     launch() {
-        !this.get('id') && this.set('id', ++id);
-        this.room   = this.collection.room;
-        this.worker = new Worker('./app/actors/worker.js');
+        this.callbacks = {};
+        this.room      = this.collection.room;
+        this.worker    = new Worker('./app/actors/worker.js');
         this.worker.on('message', this.onWorkerMessage);
-        this.room.actors.add(this);
+
+        this.testRun();
     }
 });
 

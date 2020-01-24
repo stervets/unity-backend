@@ -254,7 +254,6 @@ Interpreter.prototype.step = function() {
           console.log(type, this.stepFunctions_[type]);
       }
     var nextState = this.stepFunctions_[type](stack, state, node);
-      //console.log(nextState, type);
   } catch (e) {
     // Eat any step errors.  They have been thrown on the stack.
     if (e !== Interpreter.STEP_ERROR) {
@@ -278,7 +277,27 @@ Interpreter.prototype.step = function() {
  *     false if no more instructions.
  */
 Interpreter.prototype.run = function() {
-  while (!this.paused_ && this.step()) {}
+  var scriptFinished;
+  while(!this.paused_ && !scriptFinished){
+      try{
+          scriptFinished = !this.step();
+      }catch(e){
+          this.onRuntimeError && this.onRuntimeError(e);
+      }
+
+      if (this.paused){
+          if (this.onDebug){
+              var state = this.stateStack[this.stateStack.length - 1];
+              this.onDebug({
+                  start: state.node.start,
+                  end: state.node.end,
+                  scope: state.scope.properties
+              });
+          }
+          return;
+      }
+  }
+  //while (!this.paused_ && this.step()) {}
   return this.paused_;
 };
 
@@ -2871,8 +2890,7 @@ Interpreter.prototype.unwind = function(type, value, label) {
     realError = String(value);
   }
 
-  console.warn("INTERPRETER ERROR:", realError.message);
-  //throw realError;
+  throw realError;
 };
 
 /**
