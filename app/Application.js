@@ -142,7 +142,6 @@ module.exports = Backbone.Model.extend({
     },
 
     launch(opts) {
-        this.queries = {};
         var http     = require('http').createServer(opts.express);
         this.io      = require('socket.io')(http);
 
