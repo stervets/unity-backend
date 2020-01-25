@@ -94,6 +94,8 @@ module.exports = Backbone.Model.extend({
     },
 
     launch(){
-        this.addActor();
+        this.addActor({
+            id: 0
+        });
     }
 });

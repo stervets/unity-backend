@@ -109,18 +109,17 @@ module.exports = Backbone.Model.extend({
      client.socket.emit('q', { id: 0, com, vars });
      });
      },
-
-     sendRoomQuery(socketRoom, actorId, com, vars, callback) {
-     var data = {
-     id: actorId,
-     com,
-     vars
-     };
-     this.io.to(socketRoom).emit('q', data);
-     //this.roomCallbacks[`${socketRoom}-${actorId}`] = { ...data, callback };
-     },
-
      */
+
+    sendRoomQuery(socketRoom, actorId, com, vars) {
+        var data = {
+            id: actorId,
+            com,
+            vars
+        };
+        console.log('send data', data);
+        this.io.to(socketRoom).emit('q', data);
+    },
 
     initCollections() {
         this.rooms = new Rooms();

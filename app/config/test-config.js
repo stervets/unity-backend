@@ -1,3 +1,10 @@
+/*
+int
+float
+string
+bool
+ */
+
 module.exports = {
     level  : 'scifi/level1',
     desc: 'Pick up card and go to the door',

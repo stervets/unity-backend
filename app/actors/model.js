@@ -1,5 +1,7 @@
 const { Worker } = require('worker_threads');
 
+const config = require('../config/test-config');
+
 module.exports = Backbone.Model.extend({
     interpreter: null,
     defaults   : {
@@ -19,6 +21,10 @@ module.exports = Backbone.Model.extend({
 
         callback(data, id) {
             this.executeCallback(id, data);
+        },
+
+        async q(data) {
+            this.postWorker('response', await this.room.send('unity', this, data.com, data.vars));
         }
     },
 
@@ -45,13 +51,13 @@ module.exports = Backbone.Model.extend({
         return callbackId;
     },
 
-    request(com, data) {
+    requestWorker(com, data) {
         return new Promise((resolve) => {
             this.worker.postMessage({ com, data, id: this.setCallback(resolve) });
         });
     },
 
-    post(com, data) {
+    postWorker(com, data) {
         this.worker.postMessage({ com, data });
     },
 
@@ -92,7 +98,7 @@ module.exports = Backbone.Model.extend({
             console.log(`${errorType} ERROR:`, error.message);
             error.loc && console.log(error.loc);
         } else {
-            console.log(errorType, 'FINISHED!!<<<<');
+            console.log(errorType, 'COMPLETE');
         }
         return error;
     },
@@ -100,30 +106,35 @@ module.exports = Backbone.Model.extend({
     async testRun() {
         var script = await loadScript('CharacterFemale');
 
-        !this.handleError('COMPILE', await this.request('compile', { script })) &&
+        !this.handleError('COMPILE', await this.requestWorker('compile', {
+            script,
+            api: config.api.Character
+        })) &&
         (() => {
-            setTimeout(() => {
-                console.log('PAUSE');
-                this.post('pause');
-            }, 1000);
+            /*
+             setTimeout(() => {
+             console.log('PAUSE');
+             this.postWorker('pause');
+             }, 1000);
 
-            setTimeout(() => {
-                console.log('RESUME');
-                this.post('resume');
-            }, 3000);
+             setTimeout(() => {
+             console.log('RESUME');
+             this.postWorker('resume');
+             }, 3000);
 
-            setTimeout(() => {
-                console.log('STOP');
-                this.post('stop');
-            }, 5000);
+             setTimeout(() => {
+             console.log('STOP');
+             this.postWorker('stop');
+             }, 5000);
+             */
             return true;
         })() &&
-        this.handleError('RUNTIME', await this.request('run'));
+        this.handleError('RUNTIME', await this.requestWorker('run'));
 
-        setTimeout(async () => {
-            console.log('RUN');
-            this.handleError('RUNTIME', await this.request('run'));
-        }, 1000);
+        // setTimeout(async () => {
+        //     console.log('RUN');
+        //     this.handleError('RUNTIME', await this.requestWorker('run'));
+        // }, 1000);
     },
 
     launch() {

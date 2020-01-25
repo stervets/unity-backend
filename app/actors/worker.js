@@ -74,7 +74,7 @@ if (isMainThread) {
     throw new Error(`WORKER SHOULD NOT BE IN MAIN THREAD: ${__filename}`)
 }
 
-var response = null;
+var unityResponse = null;
 
 const registerEnvironment = function (environment) {
     return function (interpreter, scope) {
@@ -105,8 +105,8 @@ var Worker = {
     interpreter: null,
     async postMessage(com, data) {
         return await new Promise((resolve) => {
-            response = (data) => {
-                response = null;
+            unityResponse = (data) => {
+                unityResponse = null;
                 resolve(data);
             };
             parentPort.postMessage({ com, data });
@@ -129,17 +129,55 @@ var Worker = {
     onDebug(data) {
         console.log('DEBUG DATA:');
         console.log("place", data.start, ' - ', data.end);
-        console.log("I = ",data.scope.i);
+        console.log("I = ", data.scope.i);
+    },
+
+    validators: {
+        int(param) {
+            return parseInt(param) || 0;
+        },
+        float(param) {
+            return parseFloat(param) || 0;
+        },
+        string(param) {
+            return param && param.toString && param.toString() || '';
+        },
+        bool(param) {
+            return !!param;
+        }
     },
 
     com: {
         response(data) {
-            response && response(data);
+            unityResponse && unityResponse(data);
         },
 
         compile(data, id) {
             this.compileData = data;
-            Environment      = registerEnvironment(environmentsConfig[data.environment] && environmentsConfig[data.environment] || common());
+            var api          = data.api || {};
+
+            api = _.extend(
+                api.properties || {},
+                Object.keys(api.methods || {}).reduce((res, methodName) => {
+                    var params      = api.methods[methodName].params || [];
+                    res[methodName] = async (data, resolve, reject) => {
+                        resolve(await this.postMessage('q', {
+                            com : methodName,
+                            vars: params.map((param, index) => {
+                                return [
+                                    param.type,
+                                    this.validators[param.type] ?
+                                    this.validators[param.type](data[index]) :
+                                    null
+                                ];
+                            })
+                        }).catch(reject));
+                    };
+                    return res;
+                }, {})
+            );
+
+            Environment = registerEnvironment(_.extend(common(), api));
             try {
                 Interpreter = new JSInterpreter.Interpreter(data.script, Environment);
             } catch (e) {
@@ -155,7 +193,7 @@ var Worker = {
 
         run(data, id) {
             this.compileData && (this.com.compile.call(this, this.compileData));
-            Interpreter.onRuntimeError = () => {
+            Interpreter.onRuntimeError = (e) => {
                 this.response(id, {
                     message: e.message,
                     loc    : e.loc
@@ -173,6 +211,7 @@ var Worker = {
         stop() {
             Interpreter.paused = true;
             Interpreter.onFinish();
+            unityResponse && unityResponse();
         },
 
         pause() {
