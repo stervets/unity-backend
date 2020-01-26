@@ -191,7 +191,7 @@ var Worker = {
             this.response(id);
         },
 
-        run(data, id) {
+        start(data, id) {
             this.compileData && (this.com.compile.call(this, this.compileData));
             Interpreter.onRuntimeError = (e) => {
                 this.response(id, {
@@ -204,7 +204,7 @@ var Worker = {
                 this.response(id);
             };
 
-            Interpreter.onDebug = this.onDebug;
+            //Interpreter.onDebug = this.onDebug;
             Interpreter.run();
         },
 
@@ -214,7 +214,13 @@ var Worker = {
             unityResponse && unityResponse();
         },
 
-        pause() {
+        pause(data, id) {
+            Interpreter.onDebug = (data)=>{
+                // console.log('DEBUG DATA:');
+                // console.log("place", data.start, ' - ', data.end);
+                // console.log("I = ", data.scope.i);
+                this.response(id, data.scope);
+            };
             //console.log('STOP', Interpreter.paused_);
             Interpreter.paused = true;
         },

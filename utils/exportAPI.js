@@ -39,7 +39,7 @@ public class ${filename} : ActorController {\n`;
                         return `${param.type} ${param.name}`;
                     }).join(', ');
 
-                    return content+`) {}\n`;
+                    return content+`) { SendResult(); }\n`;
                 }).join('');
 
                 content+='}';

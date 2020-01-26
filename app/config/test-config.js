@@ -14,9 +14,11 @@ module.exports = {
             name: 'CharacterController',
             isAdmin: false,
             content: `
+                console.log('Script started');
                 move(3);
                 turn(DIRECTION.LEFT);
                 turn(DIRECTION.RIGHT);
+                console.log('Script finished');
             `
         }
     ],

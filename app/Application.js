@@ -50,6 +50,7 @@ module.exports = Backbone.Model.extend({
         },
 
         setConfig(socket, config) {
+
             //console.log(config);
         },
 
@@ -71,35 +72,41 @@ module.exports = Backbone.Model.extend({
             console.log(`#log>`, data);
         },
 
-        /*
-         RunScript(socket, data){
-         var client = this.clients.get(socket.id);
-         if (client){
-         var actor = client.room.actors.get(data.id);
-         if (actor) {
-         actor.runScript(data.data);
-         }
-         }
-         },
+        addActor(socket, data) {
+            var script = TestUserConfig.scripts.find((script) => {
+                return data.script == script.name;
+            });
+            if (script) {
+                script = script.content;
+            } else {
+                console.log(`Script "${data.script}" not found`);
+                return;
+            }
 
-         a(socket, data) {
-         var client = this.clients.get(socket.id);
-         if (data.id && client) {
-         if (client.room.clients[client.get('type')].master == client) {
-         var actor = client.room.actors.get(data.id);
-         //console.log('ACTOR', actor);
-         if (actor) {
-         data.transform && actor.set('transform', data.transform);
-         data.state && actor.set('state', data.state);
-         actor.resolve && actor.resolve(data.res);
-         }
-         }
-         } else {
-         client && client.resolve && client.resolve(data.res);
-         }
-         }
+            var api = data.api.split('_')[1];
+            if (!(api = TestUserConfig.api[api])) {
+                console.log(`API "${api}" not found`);
+                return;
+            }
 
-         */
+            socket.room.addActor({
+                id     : data.id,
+                api,
+                script,
+                autorun: !!data.autorun
+            });
+
+            console.log(`Actor ${data.id} added. API: ${api}, Script: ${data.script}`);
+        },
+
+        a(socket, data) {
+            var actor = socket.room.actors.get(data.id);
+            if (actor) {
+                actor.resolve && actor.resolve(data.res);
+            } else {
+                console.log(`Unity response error: Actor ${data.id} not found`);
+            }
+        }
     },
 
     /*

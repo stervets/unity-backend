@@ -3,10 +3,15 @@ const { Worker } = require('worker_threads');
 const config = require('../config/test-config');
 
 module.exports = Backbone.Model.extend({
-    interpreter: null,
-    defaults   : {
+    defaults: {
         script: '',
+        api   : null,
     },
+
+    isCompiled: false,
+    isRunning : false,
+
+    interpreter: null,
 
     handlers: {
         //'destroy': 'onDestroy'
@@ -137,13 +142,59 @@ module.exports = Backbone.Model.extend({
         // }, 1000);
     },
 
+    script: {
+        async compile() {
+            return this.requestWorker('compile', {
+                script: this.get('script'),
+                api   : this.get('api') //config.api.Character
+            });
+        },
+
+        start() {
+            return this.requestWorker('start');
+        },
+
+        stop() {
+            this.postWorker('stop');
+        },
+
+        pause() {
+            return this.requestWorker('pause');
+        },
+
+        resume() {
+            this.postWorker('resume');
+        },
+
+        step() {
+            //TODO: make step
+        }
+    },
+
+    async start() {
+        var error = await this.script.compile();
+        if (error){
+            console.log(result);
+        }else{
+            if (this.get('autorun')){
+                console.log(await this.script.start());
+            }
+        }
+    },
+
     launch() {
+        var script  = this.script;
+        this.script = {};
+        Object.keys(script).forEach((com) => {
+            this.script[com] = script[com].bind(this);
+        });
+
         this.callbacks = {};
         this.room      = this.collection.room;
         this.worker    = new Worker('./app/actors/worker.js');
         this.worker.on('message', this.onWorkerMessage);
 
-        this.testRun();
+        this.start();
     }
 });
 
