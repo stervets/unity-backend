@@ -1,23 +1,50 @@
 /*
-int
-float
-string
-bool
+ int
+ float
+ string
+ bool
  */
 
 module.exports = {
-    level  : 'scifi/level1',
-    desc: 'Pick up card and go to the door',
+    level: 'scifi/level1',
+    desc : 'Pick up card and go to the door',
 
     scripts: [
         {
-            name: 'CharacterController',
+            name   : 'CharacterController',
             isAdmin: false,
             content: `
                 console.log('Script started');
-                move(3);
+                /*
+                while(true){
+                move(4);
                 turn(DIRECTION.LEFT);
+                move(2);
+                push();
+                
+                turn(DIRECTION.BACK);
+                move(2);
+                turn(DIRECTION.LEFT);
+                move(2);
+                
+                wait(500);
+                
+                turn(DIRECTION.BACK);
+                move(2);
                 turn(DIRECTION.RIGHT);
+                move(2);
+                push();
+                
+                turn(DIRECTION.BACK);
+                move(2);
+                
+                turn(DIRECTION.RIGHT);
+                move(4);
+                turn(DIRECTION.BACK);
+                wait(500);
+               
+                }
+                */
                 console.log('Script finished');
             `
         }
@@ -27,13 +54,14 @@ module.exports = {
             //TODO: think about make other functions injection (to another actor?)
             properties: {
                 DIRECTION: {
-                    RIGHT: 0,
-                    LEFT : 1,
-                    BACK : 2
-                },
+                    NONE : 0,
+                    RIGHT: 1,
+                    LEFT : 2,
+                    BACK : 3
+                }
             },
 
-            methods   : {
+            methods: {
                 move: {
                     desc  : 'Move character forward for a given distance',
                     params: [
@@ -49,17 +77,15 @@ module.exports = {
                     desc  : 'Turn character relative to himself',
                     params: [
                         {
-                            name: 'distance',
+                            name: 'side',
                             type: 'int',
                             desc: 'Use DIRECTION.LEFT, DIRECTION.RIGHT or DIRECTION.BACK as parameter'
                         }
                     ]
-                },
-
-                pick: {
-                    desc: 'Pick up an item from floor'
                 }
             }
-        }
+        },
+
+
     }
 };

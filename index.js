@@ -1,4 +1,5 @@
 require("./init/init");
+/*
 var express = require('express'),
     app     = express();
 
@@ -9,9 +10,9 @@ app.use("/", (request, response) => {
 });
 
 app.listen(8080);
-
+*/
 var Application = require("./app/Application");
 new Application({
-    app,
+    //app,
     port: 3000
 });
