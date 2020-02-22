@@ -14,7 +14,7 @@ module.exports = Backbone.Model.extend({
     interpreter: null,
 
     handlers: {
-        //'destroy': 'onDestroy'
+        'destroy': 'onDestroy'
     },
 
     dataValidators: {},
@@ -29,7 +29,7 @@ module.exports = Backbone.Model.extend({
         },
 
         async q(data) {
-            this.postWorker('response', await this.room.send('unity', this, data.com, data.vars));
+            this.postWorker('response', await this.room.sendQuery('unity', this, data.com, data.vars));
         }
     },
 
@@ -37,9 +37,10 @@ module.exports = Backbone.Model.extend({
     //     return this.room.send('unity', this, com, data);
     // },
 
-    // onDestroy() {
-    //     this.room.actors.remove(this);
-    // },
+    onDestroy() {
+        this.script.stop(); //TODO check this is needed
+        this.worker.terminate();
+    },
 
     executeCallback(id, data) {
         if (this.callbacks[id]) {

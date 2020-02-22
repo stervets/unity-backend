@@ -1,7 +1,7 @@
 ManifestFileVersion: 0
-CRC: 3143694365
+CRC: 1474607428
 AssetBundleManifest:
   AssetBundleInfos:
     Info_0:
-      Name: scifi/level/1
+      Name: scifi/level1
       Dependencies: {}

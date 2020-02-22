@@ -7,25 +7,27 @@ export default class SocketController {
 
     busHandlers = {
         /*
-        play(params) {
-            if (params.play) {
-                this.socket.emit('RunScript', params);
-            }
-        }
+         play(params) {
+         if (params.play) {
+         this.socket.emit('RunScript', params);
+         }
+         }
 
          */
     };
 
-    socketHandlers      = {
+    socketHandlers = {
         connect(...attrs) {
             this.socket.emit('register', {
                 type: 'editor',
                 room: this.roomName
             });
+            this.resolveConnect && this.resolveConnect();
         },
 
         disconnect() {
             this.$bus && this.$bus.$emit('editor-removeAllTabs');
+            this.onDisconnect();
         },
 
         q(data) {
@@ -74,20 +76,33 @@ export default class SocketController {
         }
     }
 
-    registerAPI(api){
+    onDisconnect() {
+    }
 
+    connect() {
+        return new Promise((resolve, reject) => {
+            this.disconnect();
+
+            this.resolveConnect = () => {
+                this.resolveConnect = null;
+                resolve();
+            };
+
+            this.socket = Socket.connect(this.GAME_SERVER_ADDRESS);
+
+            Object.keys(this.socketHandlers).forEach((handlerName) => {
+                this.socket.on(handlerName, this.socketHandlers[handlerName].bind(this));
+            });
+        });
+    }
+
+    registerConfig(api) {
+        this.socket.emit('registerConfig', api);
     }
 
     constructor(roomName, $bus) {
-        this.$bus = $bus;
+        this.$bus     = $bus;
         this.roomName = roomName;
-
-        this.disconnect();
-        this.socket = Socket.connect(this.GAME_SERVER_ADDRESS);
-
-        Object.keys(this.socketHandlers).forEach((handlerName) => {
-            this.socket.on(handlerName, this.socketHandlers[handlerName].bind(this));
-        });
 
         if (this.$bus) {
             setTimeout(() => {

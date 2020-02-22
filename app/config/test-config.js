@@ -15,7 +15,7 @@ module.exports = {
             isAdmin: false,
             content: `
                 console.log('Script started');
-                /*
+                
                 while(true){
                 move(4);
                 turn(DIRECTION.LEFT);
@@ -44,7 +44,7 @@ module.exports = {
                 wait(500);
                
                 }
-                */
+                
                 console.log('Script finished');
             `
         }
@@ -82,6 +82,10 @@ module.exports = {
                             desc: 'Use DIRECTION.LEFT, DIRECTION.RIGHT or DIRECTION.BACK as parameter'
                         }
                     ]
+                },
+
+                push:{
+                    desc  : 'Push the button',
                 }
             }
         },

@@ -1,7 +1,14 @@
-import SocketController from "./socket/SocketController"
+import SocketController from "./socket/SocketController";
+import TestAPI from "../app/config/test-config.js";
 
-//console.log(SocketController);
+(async () => {
+    var socketController = new SocketController("test-room"),
+        connectSocket = async ()=>{
+            await socketController.connect();
+            socketController.registerConfig(TestAPI);
+        };
 
-(()=>{
-    var socketController = new SocketController("test-room");
+    socketController.onDisconnect = connectSocket;
+
+    connectSocket();
 })();

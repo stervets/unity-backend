@@ -36,21 +36,26 @@ module.exports = Backbone.Model.extend({
             client.room       = room;
             client.socket     = socket;
             client.socketRoom = `${roomId}-${clientProps.type}`;
-            room.addClient(client);
 
             socket.join(roomId);
             socket.join(client.socketRoom);
 
+            room.addClient(client);
+
             client.start();
             console.log(`Client "${client.get('type')}" in room ${room.id} started`);
-            if (!room.id.indexOf('test')) {
-                room.isTest = true;
-                this.socketHandlers.setConfig.call(this, socket, TestUserConfig);
-            }
         },
 
-        setConfig(socket, config) {
-
+        registerConfig(socket, config) {
+            if (socket.room) {
+                socket.room.registerConfig(config);
+            } else {
+                console.warn("Socket has no room");
+            }
+            // if (!room.id.indexOf('test')) {
+            //     room.isTest = true;
+            //     this.socketHandlers.setConfig.call(this, socket, TestUserConfig);
+            // }
             //console.log(config);
         },
 
@@ -62,7 +67,7 @@ module.exports = Backbone.Model.extend({
                          }, null);
             if (client) {
                 client.destroy();
-                client.room.removeClient(client);
+                client.room.onClientDestroy(client);
             }
             console.log(`Socket ${socket.id} disconnected`);
         },
@@ -73,30 +78,40 @@ module.exports = Backbone.Model.extend({
         },
 
         addActor(socket, data) {
-            var script = TestUserConfig.scripts.find((script) => {
-                return data.script == script.name;
-            });
-            if (script) {
-                script = script.content;
+            if (socket.room) {
+
+                if (socket.room.config) {
+                    var script = socket.room.config.scripts.find((script) => {
+                        return data.script == script.name;
+                    });
+
+                    if (script) {
+                        script = script.content;
+                    } else {
+                        console.log(`Script "${data.script}" not found`);
+                        return;
+                    }
+
+                    var api = data.api.split('_')[1];
+                    if (!(api = socket.room.config.api[api])) {
+                        console.log(`API "${api}" not found`);
+                        return;
+                    }
+
+                    socket.room.addActor({
+                        id     : data.id,
+                        api,
+                        script,
+                        autorun: !!data.autorun
+                    });
+
+                    console.log(`Actor ${data.id} added. API: ${api}, Script: ${data.script}`);
+                } else {
+                    console.warn("Room has no config");
+                }
             } else {
-                console.log(`Script "${data.script}" not found`);
-                return;
+                console.warn("Socket has no room");
             }
-
-            var api = data.api.split('_')[1];
-            if (!(api = TestUserConfig.api[api])) {
-                console.log(`API "${api}" not found`);
-                return;
-            }
-
-            socket.room.addActor({
-                id     : data.id,
-                api,
-                script,
-                autorun: !!data.autorun
-            });
-
-            console.log(`Actor ${data.id} added. API: ${api}, Script: ${data.script}`);
         },
 
         a(socket, data) {
@@ -124,8 +139,13 @@ module.exports = Backbone.Model.extend({
             com,
             vars
         };
-        console.log('send data', data);
+        console.log('sendRoomQuery', data);
         this.io.to(socketRoom).emit('q', data);
+    },
+
+    sendRoom(socketRoom, com, vars) {
+        console.log('sendRoom', com, vars);
+        this.io.to(socketRoom).emit(com, vars);
     },
 
     initCollections() {

@@ -18,22 +18,39 @@ module.exports = Backbone.Model.extend({
         'actors.remove': 'onActorRemove'
     },
 
+    loadUnityLevel(){
+        if (this.config && this.unityClient && this.editorClient){
+            this.send('unity', 'loadLevel', this.config.level);
+        }
+    },
+
     addClient(client) {
         var type = client.get('type');
-        !this.clients[type] && (this.clients[type] = new Clients()),
-            isUnityClient = type == 'unity';
-
-        if (isUnityClient) {
-            if (this.unityClient) {
-                this.unityClient.socket.disconnect();
-                this.unityClient.destroy();
-            }
-        }
+        !this.clients[type] && (this.clients[type] = new Clients());
 
         var addedCliend  = this.clients[type].add(client);
         addedCliend.room = this;
 
-        isUnityClient && (this.unityClient = addedCliend);
+        if (client.isUnityClient()) {
+            if (this.unityClient) {
+                this.unityClient.socket.disconnect();
+                this.unityClient.destroy();
+            }
+            this.unityClient = addedCliend;
+            this.loadUnityLevel();
+        }
+
+        if (client.isEditorClient()) {
+            if (this.editorClient) {
+                this.editorClient.socket.disconnect();
+                this.editorClient.destroy();
+            }
+            this.editorClient = addedCliend;
+            this.loadUnityLevel();
+        }
+
+        //isUnityClient && (this.unityClient = addedCliend);
+        //isEditorClient && (this.editorClient = addedCliend);
     },
 
     addActor(options) {
@@ -49,11 +66,14 @@ module.exports = Backbone.Model.extend({
 
     },
 
-    removeClient(client) {
+    onClientDestroy(client) {
+        if (client.isEditorClient()){
+            this.config = null;
+        }
+
         var destroy = true;
         for (let key in this.clients) {
             if (this.clients[key].length) {
-                console.log('FOUND CLIENT', this.clients.toJSON());
                 destroy = false;
                 break;
             }
@@ -79,11 +99,21 @@ module.exports = Backbone.Model.extend({
         }
     },
 
-    send(clientType, actor, com, vars) {
+    registerConfig(config) {
+        this.config = config;
+        this.loadUnityLevel();
+        console.log(`Config ${config.level} loaded`);
+    },
+
+    sendQuery(clientType, actor, com, vars) {
         return new Promise((resolve) => {
             actor.resolve = resolve;
             this.application.sendRoomQuery(`${this.id}-${clientType}`, actor.id, com, vars);
         });
+    },
+
+    send(clientType, com, vars){
+        this.application.sendRoom(`${this.id}-${clientType}`, com, vars);
     },
 
     initCollections() {
@@ -93,7 +123,7 @@ module.exports = Backbone.Model.extend({
         });
     },
 
-    launch(){
+    launch() {
         // this.addActor({
         //     id: 0
         // });

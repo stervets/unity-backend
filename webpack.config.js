@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-    entry: './frontend/index.js',
+    entry: ['babel-polyfill', './frontend/index.js'],
 
     output: {
         filename: 'main.js'
@@ -14,8 +14,12 @@ module.exports = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env'],
-                        plugins: ['@babel/plugin-proposal-class-properties']
+                        "presets": [
+                            '@babel/preset-env'
+                        ],
+                        plugins: [
+                            '@babel/plugin-proposal-class-properties'
+                        ]
                     }
                 }
             }
