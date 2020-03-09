@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "start": "nodemon --inspect ./index.js & webpack-dev-server",
+        "server": "nodemon --inspect ./index.js",
         "export": "node ./utils/exportAPI.js",
         "test": "echo \"Error: no test specified\" && exit 1",
         "fe": "webpack-dev-server"

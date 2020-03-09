@@ -13,6 +13,7 @@ module.exports = {
         {
             name   : 'CharacterController',
             isAdmin: false,
+            api: 'Character',
             content: `
                 console.log('Script started');
                 
@@ -51,6 +52,11 @@ module.exports = {
     ],
     api    : {
         Character: {
+            scripts: [{
+                name   : 'CharacterController',
+                isAdmin: false,
+                content: 'asd'
+            }],
             //TODO: think about make other functions injection (to another actor?)
             properties: {
                 DIRECTION: {
@@ -88,8 +94,6 @@ module.exports = {
                     desc  : 'Push the button',
                 }
             }
-        },
-
-
+        }
     }
 };

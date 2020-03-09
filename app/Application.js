@@ -52,11 +52,6 @@ module.exports = Backbone.Model.extend({
             } else {
                 console.warn("Socket has no room");
             }
-            // if (!room.id.indexOf('test')) {
-            //     room.isTest = true;
-            //     this.socketHandlers.setConfig.call(this, socket, TestUserConfig);
-            // }
-            //console.log(config);
         },
 
         disconnect(socket) {
@@ -77,6 +72,11 @@ module.exports = Backbone.Model.extend({
             console.log(`#log>`, data);
         },
 
+        FinishLevel(socket, data){
+            if (socket.room) {
+                console.log("FINISHED LEVEL!");
+            }
+        },
         addActor(socket, data) {
             if (socket.room) {
 
