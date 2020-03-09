@@ -72,7 +72,7 @@ module.exports = Backbone.Model.extend({
             console.log(`#log>`, data);
         },
 
-        FinishLevel(socket, data){
+        FinishLevel(socket, data) {
             if (socket.room) {
                 console.log("FINISHED LEVEL!");
             }
@@ -121,6 +121,32 @@ module.exports = Backbone.Model.extend({
             } else {
                 console.log(`Unity response error: Actor ${data.id} not found`);
             }
+        },
+
+        /*
+         Frontend request
+         */
+        feReq(socket, data) {
+            if (!(_.isObject(data) && data.id && data.com)){
+                console.warn('Wrong data in FE request');
+                return;
+            }
+
+            if (this.feHandlers[data.com]){
+                this.feHandlers[data.com].call(this, socket, data);
+            }else{
+                this.sendFrontendResponse(socket, data.id, null, 'FE request handler not found');
+            }
+        }
+    },
+
+    sendFrontendResponse(socket, id, data, error){
+        socket.emit('feRes', { id, data, error });
+    },
+
+    feHandlers: {
+        test(socket, data){
+            this.sendFrontendResponse(socket, data.id,'FE request ok');
         }
     },
 
