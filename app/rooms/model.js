@@ -99,7 +99,7 @@ module.exports = Backbone.Model.extend({
         }
     },
 
-    registerConfig(config) {
+    registerAPI(config) {
         this.config = config;
         this.loadUnityLevel();
         console.log(`Config ${config.level} loaded`);

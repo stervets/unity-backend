@@ -46,9 +46,9 @@ module.exports = Backbone.Model.extend({
             console.log(`Client "${client.get('type')}" in room ${room.id} started`);
         },
 
-        registerConfig(socket, config) {
+        registerAPI(socket, config) {
             if (socket.room) {
-                socket.room.registerConfig(config);
+                socket.room.registerAPI(config);
             } else {
                 console.warn("Socket has no room");
             }
@@ -126,16 +126,16 @@ module.exports = Backbone.Model.extend({
         /*
          Frontend request
          */
-        feReq(socket, data) {
-            if (!(_.isObject(data) && data.id && data.com)){
+        feReq(socket, request) {
+            if (!(_.isObject(request) && request.id && request.com)){
                 console.warn('Wrong data in FE request');
                 return;
             }
-
-            if (this.feHandlers[data.com]){
-                this.feHandlers[data.com].call(this, socket, data);
+            console.log('RECEIVED DATA', request);
+            if (this.feHandlers[request.com]){
+                this.feHandlers[request.com].call(this, socket, request);
             }else{
-                this.sendFrontendResponse(socket, data.id, null, 'FE request handler not found');
+                this.sendFrontendResponse(socket, request.id, null, `FE request handler "${request.com}" not found`);
             }
         }
     },
@@ -145,8 +145,8 @@ module.exports = Backbone.Model.extend({
     },
 
     feHandlers: {
-        test(socket, data){
-            this.sendFrontendResponse(socket, data.id,'FE request ok');
+        test(socket, request){
+            this.sendFrontendResponse(socket, request.id,request.data.a + request.data.b);
         }
     },
 
