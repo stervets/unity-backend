@@ -18,8 +18,8 @@ module.exports = Backbone.Model.extend({
         'actors.remove': 'onActorRemove'
     },
 
-    loadUnityLevel(){
-        if (this.config && this.unityClient && this.editorClient){
+    loadUnityLevel() {
+        if (this.config && this.unityClient && this.editorClient) {
             this.send('unity', 'loadLevel', this.config.level);
         }
     },
@@ -33,6 +33,7 @@ module.exports = Backbone.Model.extend({
 
         if (client.isUnityClient()) {
             if (this.unityClient) {
+                this.destroyAllActors();
                 this.unityClient.socket.disconnect();
                 this.unityClient.destroy();
             }
@@ -67,7 +68,7 @@ module.exports = Backbone.Model.extend({
     },
 
     onClientDestroy(client) {
-        if (client.isEditorClient()){
+        if (client.isEditorClient()) {
             this.config = null;
         }
 
@@ -85,6 +86,12 @@ module.exports = Backbone.Model.extend({
         destroy && this.destroy();
     },
 
+    destroyAllActors() {
+        while (this.actors.length) {
+            this.actors.first().destroy();
+        }
+    },
+
     onDestroy() {
         for (let key in this.clients) {
             if (this.clients[key].length) {
@@ -94,15 +101,20 @@ module.exports = Backbone.Model.extend({
             }
         }
 
-        while (this.actors.length) {
-            this.actors.first().destroy();
-        }
+        this.destroyAllActors();
     },
 
     registerAPI(config) {
         this.config = config;
         this.loadUnityLevel();
         console.log(`Config ${config.level} loaded`);
+    },
+
+    runAllScripts(except) {
+        except = except || [];
+        this.actors.forEach(async (actor) => {
+            !~except.indexOf(actor.id) && actor.scriptRun();
+        });
     },
 
     sendQuery(clientType, actor, com, vars) {
@@ -112,7 +124,7 @@ module.exports = Backbone.Model.extend({
         });
     },
 
-    send(clientType, com, vars){
+    send(clientType, com, vars) {
         this.application.sendRoom(`${this.id}-${clientType}`, com, vars);
     },
 

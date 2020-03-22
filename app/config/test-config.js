@@ -17,7 +17,15 @@ module.exports = {
             content: `
                 console.log('Script started');
                 
+                var i = 0;
                 while(true){
+                    move(1);
+                    move(1);
+                    turn(DIRECTION.BACK);
+                    //console.log(i++);
+                }
+                
+                while(false){
                 move(4);
                 turn(DIRECTION.LEFT);
                 move(2);

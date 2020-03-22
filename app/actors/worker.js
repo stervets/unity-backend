@@ -1,6 +1,15 @@
-global.acorn = require('../../vendor/JS-Interpreter/acorn');
-global._     = require("lodash");
-var common   = require('./environments/Common');
+global.acorn             = require('../../vendor/JS-Interpreter/acorn');
+global._                 = require("lodash");
+var common               = require('./environments/Common');
+const {
+          isMainThread, parentPort, workerData
+      }                  = require('worker_threads'),
+      JSInterpreter      = require('../../vendor/JS-Interpreter/interpreter'),
+      environmentsConfig = require('./environmentsConfig');
+
+if (isMainThread) {
+    throw new Error(`WORKER SHOULD NOT BE IN MAIN THREAD: ${__filename}`)
+}
 
 var Interpreter = null,
     Environment = null;
@@ -64,16 +73,6 @@ global.getParams = (data) => {
     });
 };
 
-const {
-          isMainThread, parentPort, workerData
-      }                  = require('worker_threads'),
-      JSInterpreter      = require('../../vendor/JS-Interpreter/interpreter'),
-      environmentsConfig = require('./environmentsConfig');
-
-if (isMainThread) {
-    throw new Error(`WORKER SHOULD NOT BE IN MAIN THREAD: ${__filename}`)
-}
-
 var unityResponse = null;
 
 const registerEnvironment = function (environment) {
@@ -120,8 +119,8 @@ var Worker = {
     onRuntimeError(id) {
         return (e) => {
             this.response(id, {
-                message: e.message,
-                loc    : e.loc
+                message : e.message,
+                location: e.loc
             });
         };
     },
@@ -183,8 +182,8 @@ var Worker = {
             } catch (e) {
                 this.compileData = false;
                 this.response(id, {
-                    message: e.message,
-                    loc    : e.loc
+                    message : e.message,
+                    location: e.loc
                 });
                 return;
             }
@@ -195,8 +194,8 @@ var Worker = {
             this.compileData && (this.com.compile.call(this, this.compileData));
             Interpreter.onRuntimeError = (e) => {
                 this.response(id, {
-                    message: e.message,
-                    loc    : e.loc
+                    message : e.message,
+                    location: e.loc
                 });
             };
 
@@ -215,14 +214,23 @@ var Worker = {
         },
 
         pause(data, id) {
-            Interpreter.onDebug = (data)=>{
+            Interpreter.onDebug = (data) => {
                 // console.log('DEBUG DATA:');
                 // console.log("place", data.start, ' - ', data.end);
                 // console.log("I = ", data.scope.i);
                 this.response(id, data.scope);
             };
             //console.log('STOP', Interpreter.paused_);
-            Interpreter.paused = true;
+            Interpreter.paused  = true;
+        },
+
+        step(data, id) {
+            Interpreter.onDebug = (data) => {
+                // console.log('DEBUG DATA:');
+                // console.log("place", data.start, ' - ', data.end);
+                // console.log("I = ", data.scope.i);
+                this.response(id, data.scope);
+            };
         },
 
         resume() {

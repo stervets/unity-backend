@@ -42,6 +42,10 @@ module.exports = Backbone.Model.extend({
 
             room.addClient(client);
 
+            if (clientProps.development) {
+                socket.room.registerAPI(TestUserConfig);
+            }
+
             client.start();
             console.log(`Client "${client.get('type')}" in room ${room.id} started`);
         },
@@ -92,26 +96,65 @@ module.exports = Backbone.Model.extend({
                         return;
                     }
 
-                    var api = data.api.split('_')[1];
-                    if (!(api = socket.room.config.api[api])) {
-                        console.log(`API "${api}" not found`);
+                    var apiName = data.api.split('_')[1], api;
+                    if (!(api = socket.room.config.api[apiName])) {
+                        console.log(`API "${apiName}" not found`);
                         return;
                     }
 
                     socket.room.addActor({
-                        id     : data.id,
+                        id        : data.id,
+                        name      : data.name,
                         api,
                         script,
-                        autorun: !!data.autorun
+                        scriptName: data.script,
+                        autorun   : !!data.autorun
                     });
 
-                    console.log(`Actor ${data.id} added. API: ${api}, Script: ${data.script}`);
+                    console.log(`Actor ${data.name} added. ID: ${data.id}, API: ${apiName}, Script: ${data.script}`);
                 } else {
                     console.warn("Room has no config");
                 }
             } else {
                 console.warn("Socket has no room");
             }
+        },
+
+        RunAllScripts(socket, data) {
+            if (socket.room) {
+                console.log(data);
+                var except = [];
+                if (data && data.except) {
+                    except = data.except.toString().split(',').reduce((res, actorId) => {
+                        actorId = parseInt(actorId.trim());
+                        if (actorId && !~except.indexOf(actorId)) {
+                            res.push(actorId);
+                        }
+                        return res;
+                    }, []);
+                }
+                socket.room.runAllScripts(except);
+            } else {
+                console.warn("Socket has no room");
+            }
+        },
+
+        ScriptStop(socket, data) {
+            this.checkActorAndRun(socket, data, (actor) => {
+                actor.scriptStop();
+            });
+        },
+
+        ScriptRun(socket, data) {
+            this.checkActorAndRun(socket, data, (actor) => {
+                actor.scriptRun();
+            });
+        },
+
+        ScriptStep(socket, data) {
+            this.checkActorAndRun(socket, data, (actor) => {
+                actor.scriptStep();
+            });
         },
 
         a(socket, data) {
@@ -127,26 +170,43 @@ module.exports = Backbone.Model.extend({
          Frontend request
          */
         feReq(socket, request) {
-            if (!(_.isObject(request) && request.id && request.com)){
+            if (!(_.isObject(request) && request.id && request.com)) {
                 console.warn('Wrong data in FE request');
                 return;
             }
             console.log('RECEIVED DATA', request);
-            if (this.feHandlers[request.com]){
+            if (this.feHandlers[request.com]) {
                 this.feHandlers[request.com].call(this, socket, request);
-            }else{
+            } else {
                 this.sendFrontendResponse(socket, request.id, null, `FE request handler "${request.com}" not found`);
             }
         }
     },
 
-    sendFrontendResponse(socket, id, data, error){
+    checkActorAndRun(socket, data, callback) {
+        if (!(data && data.id)) {
+            console.warn("Need actor id");
+            return;
+        }
+        if (socket.room) {
+            var actor = socket.room.actors.get(data.id);
+            if (actor) {
+                callback(actor);
+            } else {
+                console.warn(`Actor ${data.id} not found`);
+            }
+        } else {
+            console.warn("Socket has no room");
+        }
+    },
+
+    sendFrontendResponse(socket, id, data, error) {
         socket.emit('feRes', { id, data, error });
     },
 
     feHandlers: {
-        test(socket, request){
-            this.sendFrontendResponse(socket, request.id,request.data.a + request.data.b);
+        test(socket, request) {
+            this.sendFrontendResponse(socket, request.id, request.data.a + request.data.b);
         }
     },
 

@@ -276,9 +276,9 @@ Interpreter.prototype.step = function() {
  * @return {boolean} True if a execution is asynchronously blocked,
  *     false if no more instructions.
  */
-Interpreter.prototype.run = function() {
+Interpreter.prototype.run = function(oneStep) {
   var scriptFinished;
-  while(!this.paused_ && !scriptFinished){
+  while((!this.paused_ || oneStep) && !scriptFinished){
       try{
           scriptFinished = !this.step();
       }catch(e){
@@ -297,7 +297,6 @@ Interpreter.prototype.run = function() {
           return;
       }
   }
-  //while (!this.paused_ && this.step()) {}
   return this.paused_;
 };
 

@@ -2,16 +2,22 @@ const { Worker } = require('worker_threads');
 
 const config = require('../config/test-config');
 
+const STATE = {
+    STOPPED : 0,
+    COMPILED: 1,
+    RUNNING : 2,
+    PAUSED  : 3
+};
+
 module.exports = Backbone.Model.extend({
     defaults: {
-        script: '',
-        api   : null,
+        name      : '',
+        scriptName: '',
+        script    : '',
+        api       : null,
     },
 
-    isCompiled: false,
-    isRunning : false,
-
-    interpreter: null,
+    state: STATE.STOPPED,
 
     handlers: {
         'destroy': 'onDestroy'
@@ -102,7 +108,7 @@ module.exports = Backbone.Model.extend({
     handleError(errorType, error) {
         if (error) {
             console.log(`${errorType} ERROR:`, error.message);
-            error.loc && console.log(error.loc);
+            error.location && console.log(error.location);
         } else {
             console.log(errorType, 'COMPLETE');
         }
@@ -174,13 +180,75 @@ module.exports = Backbone.Model.extend({
 
     async start() {
         var error = await this.script.compile();
-        if (error){
-            console.log(result);
-        }else{
-            if (this.get('autorun')){
-                console.log(await this.script.start());
+        if (error) {
+            return error;
+        } else {
+            return await this.script.start();
+        }
+    },
+
+    async startWithLog() {
+        console.log(`Run script for actor ${this.get('name')}`);
+        var error = this.handleError('COMPILE', await this.script.compile());
+        if (error) {
+            return error;
+        }
+        return this.handleError('RUNTIME', await this.script.start());
+    },
+
+    scriptStop() {
+        if (this.state > STATE.STOPPED) {
+            this.script.stop();
+        }
+        this.state = STATE.STOPPED;
+    },
+
+    async scriptRun(doNotRun) {
+        var error = null;
+        if (this.state > STATE.RUNNING) {
+            this.state = STATE.RUNNING;
+            this.script.resume();
+            return error;
+        }
+
+        if (this.state > STATE.STOPPED) {
+            this.scriptStop();
+        }
+
+        if (this.state < STATE.COMPILED) {
+            if ((error = this.handleError('COMPILE', await this.script.compile()))) {
+                return error;
+            }
+            this.state = STATE.COMPILED;
+        }
+
+        if (!doNotRun) {
+            this.state = STATE.RUNNING;
+            error      = this.handleError('RUNTIME', await this.script.start());
+        }
+
+        return error;
+    },
+
+    async scriptStep() {
+        var error;
+        if (this.state < STATE.RUNNING) {
+            if (error = await this.scriptRun(true)) {
+                return error;
             }
         }
+
+        if (this.state < STATE.PAUSED) {
+            this.handleError('RUNTIME', this.script.start());
+        }else{
+            this.script.resume();
+        }
+        this.script.pause();
+        this.state = STATE.PAUSED;
+        console.log('PAUSE>>');
+        // if (this.state < STATE.RUNNING) {
+        //
+        // }
     },
 
     launch() {
@@ -195,7 +263,9 @@ module.exports = Backbone.Model.extend({
         this.worker    = new Worker('./app/actors/worker.js');
         this.worker.on('message', this.onWorkerMessage);
 
-        this.start();
+        if (this.get('autorun')) {
+            this.startWithLog();
+        }
     }
 });
 
