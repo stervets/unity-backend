@@ -99,6 +99,18 @@ const registerEnvironment = function (environment) {
         register(environment, scope);
     };
 };
+var restrictedProperties = [
+    'NaN',         'Infinity',   'undefined',
+    'window',      'this',       'self',
+    'Function',    'Object',     'Array',
+    'String',      'Boolean',    'Number',
+    'Date',        'RegExp',     'Error',
+    'EvalError',   'RangeError', 'ReferenceError',
+    'SyntaxError', 'TypeError',  'URIError',
+    'Math',        'JSON',       'eval',
+    'parseInt',    'parseFloat', 'isNaN',
+    'isFinite', 'console'
+];
 
 var Worker = {
     interpreter: null,
@@ -143,7 +155,6 @@ var Worker = {
         },
 
         compile(data, id) {
-            this.compileData = data;
             var api          = data.api || {};
 
             api = _.extend(
@@ -171,7 +182,7 @@ var Worker = {
             try {
                 Interpreter = new JSInterpreter.Interpreter(data.script, Environment);
             } catch (e) {
-                this.compileData = false;
+                //this.compileData = false;
                 this.response(id, {
                     message : e.message,
                     location: e.loc
@@ -181,8 +192,8 @@ var Worker = {
             this.response(id);
         },
 
-        start(data, id) {
-            this.compileData && (this.com.compile.call(this, this.compileData));
+        run(data, id) {
+            //this.compileData && (this.com.compile.call(this, this.compileData));
             Interpreter.onRuntimeError = (e) => {
                 this.response(id, {
                     message : e.message,
@@ -191,19 +202,23 @@ var Worker = {
             };
 
             Interpreter.onFinish = () => {
+                Interpreter.onFinish = null;
                 this.response(id);
             };
 
-            //Interpreter.onDebug = this.onDebug;
-            Interpreter.run();
+            Interpreter.isRunning = true;
+            data.run && this.com.resume.call(this);
         },
 
         stop() {
-            Interpreter.paused = true;
-            Interpreter.onFinish();
-            unityResponse && unityResponse();
+            if (Interpreter.isRunning) {
+                //Interpreter.paused = true;
+                Interpreter.isRunning = false;
+                Interpreter.onFinish && Interpreter.onFinish();
+                unityResponse && unityResponse();
+            }
         },
-
+/*
         pause(data, id) {
             Interpreter.onDebug = (data) => {
                 // console.log('DEBUG DATA:');
@@ -214,21 +229,42 @@ var Worker = {
             //console.log('STOP', Interpreter.paused_);
             Interpreter.paused  = true;
         },
-
+*/
         step(data, id) {
             Interpreter.onDebug = (data) => {
                 // console.log('DEBUG DATA:');
                 // console.log("place", data.start, ' - ', data.end);
-                // console.log("I = ", data.scope.i);
-                this.response(id, data.scope);
+                //console.log("I = ", data.scope.i, '->', data.scope.asd);
+                //console.log(getParams([data.scope]));
+                data && (data.scope = Object.keys(data.scope).reduce((res, key)=>{
+                    var value = data.scope[key];
+                    if (!~restrictedProperties.indexOf(key) &&
+                        typeof value != 'function' && typeof value != 'undefined'){
+                        //console.log('K', key, 'V', value);
+                        //console.log('TYPE>',typeof  value);
+                        if (value.toString() != '[object Function]'){
+                            //value = typeof value == 'number' || typeof value == 'boolean' ? value : value.toString();
+                            res[key] = Interpreter.pseudoToNative(value);
+                        }
+                    }
+                    return res;
+                }, {}));
+
+                this.response(id, data);
             };
+
+            if (Interpreter.paused_){
+                Interpreter.run();
+            }
+            Interpreter.paused_ = true;
         },
 
         resume() {
             //console.log('RESUME', Interpreter.paused_);
-            Interpreter.paused = false;
+            Interpreter.paused_ = false;
             Interpreter.run();
         }
+
     }
 };
 

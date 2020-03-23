@@ -157,16 +157,14 @@ module.exports = Backbone.Model.extend({
             });
         },
 
-        start() {
-            return this.requestWorker('start');
+        run(doNotRun) {
+            return this.requestWorker('run', {
+                run: !doNotRun
+            });
         },
 
         stop() {
             this.postWorker('stop');
-        },
-
-        pause() {
-            return this.requestWorker('pause');
         },
 
         resume() {
@@ -174,27 +172,29 @@ module.exports = Backbone.Model.extend({
         },
 
         step() {
-            //TODO: make step
+            return this.requestWorker('step');
         }
     },
 
-    async start() {
-        var error = await this.script.compile();
-        if (error) {
-            return error;
-        } else {
-            return await this.script.start();
-        }
-    },
-
-    async startWithLog() {
-        console.log(`Run script for actor ${this.get('name')}`);
-        var error = this.handleError('COMPILE', await this.script.compile());
-        if (error) {
-            return error;
-        }
-        return this.handleError('RUNTIME', await this.script.start());
-    },
+    /*
+     async start() {
+     var error = await this.script.compile();
+     if (error) {
+     return error;
+     } else {
+     return await this.script.start();
+     }
+     },
+     /*
+     async startWithLog() {
+     console.log(`Run script for actor ${this.get('name')}`);
+     var error = this.handleError('COMPILE', await this.script.compile());
+     if (error) {
+     return error;
+     }
+     return this.handleError('RUNTIME', await this.script.start());
+     },
+     */
 
     scriptStop() {
         if (this.state > STATE.STOPPED) {
@@ -222,11 +222,15 @@ module.exports = Backbone.Model.extend({
             this.state = STATE.COMPILED;
         }
 
-        if (!doNotRun) {
-            this.state = STATE.RUNNING;
-            error      = this.handleError('RUNTIME', await this.script.start());
+        this.state = STATE.RUNNING;
+        if (doNotRun) {
+            this.script.run(true).then((error) => {
+                this.handleError('RUNTIME', error);
+            });
+            return null;
+        } else {
+            error = this.handleError('RUNTIME', await this.script.run(doNotRun));
         }
-
         return error;
     },
 
@@ -238,17 +242,10 @@ module.exports = Backbone.Model.extend({
             }
         }
 
-        if (this.state < STATE.PAUSED) {
-            this.handleError('RUNTIME', this.script.start());
-        }else{
-            this.script.resume();
-        }
-        this.script.pause();
         this.state = STATE.PAUSED;
-        console.log('PAUSE>>');
-        // if (this.state < STATE.RUNNING) {
-        //
-        // }
+        var debugData = await this.script.step();
+        debugData && console.log(`${debugData.loc.line}:${debugData.loc.column} >`, debugData.scope);
+        return debugData;
     },
 
     launch() {
@@ -263,9 +260,9 @@ module.exports = Backbone.Model.extend({
         this.worker    = new Worker('./app/actors/worker.js');
         this.worker.on('message', this.onWorkerMessage);
 
-        if (this.get('autorun')) {
-            this.startWithLog();
-        }
+        //if (this.get('autorun')) {
+        //this.startWithLog();
+        //}
     }
 });
 

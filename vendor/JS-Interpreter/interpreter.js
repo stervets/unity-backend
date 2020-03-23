@@ -38,7 +38,7 @@ var Interpreter = function (code, opt_initFunc) {
     }
     this.ast              = code;
     this.initFunc_        = opt_initFunc;
-    this.paused_          = false;
+    this.paused_          = true;
     this.polyfills_       = [];
     // Unique identifier for native functions.  Used in serialization.
     this.functionCounter_ = 0;
@@ -59,10 +59,10 @@ var Interpreter = function (code, opt_initFunc) {
     this.ast        = acorn.parse(this.polyfills_.join('\n'), Interpreter.PARSE_OPTIONS);
     this.polyfills_ = undefined;  // Allow polyfill strings to garbage collect.
     this.stripLocations_(this.ast, undefined, undefined);
-    var state       = new Interpreter.State(this.ast, this.global);
-    state.done      = false;
-    this.stateStack = [state];
-    this.run();
+    var state              = new Interpreter.State(this.ast, this.global);
+    state.done             = false;
+    this.stateStack        = [state];
+    //this.run();
     this.value             = undefined;
     // Point at the main program.
     this.ast               = code;
@@ -247,8 +247,6 @@ Interpreter.prototype.step = function () {
     var node = state.node, type = node['type'];
     if (type === 'Program' && state.done) {
         return false;
-    } else if (this.paused_) {
-        return true;
     }
     try {
         this.currentState = state;
@@ -276,30 +274,38 @@ Interpreter.prototype.step = function () {
  *     false if no more instructions.
  */
 Interpreter.prototype.run = function () {
-    var scriptFinished;
-    while (!this.paused_ && !scriptFinished) {
+    const breakLimit = 6000000;
+    var scriptFinished,
+        counter      = 0;
+    while (!scriptFinished && !this.awaitExternalExecute_) {
         try {
             scriptFinished = !this.step();
         } catch (e) {
-            console.log('ERROR', e);
             this.onRuntimeError && this.onRuntimeError(e);
         }
 
-        if (this.paused) {
+        if (this.paused_) {
             if (this.onDebug) {
-                var state = this.stateStack[this.stateStack.length - 1];
-                this.onDebug({
-                    start: state.node.start,
-                    end  : state.node.end,
-                    scope: state.scope.properties
-                });
+                if (scriptFinished){
+                    this.onDebug(null);
+                }else {
+                    var state = this.stateStack[this.stateStack.length - 1];
+                    this.onDebug({
+                        start: state.node.start,
+                        end  : state.node.end,
+                        loc  : acorn.getLineInfo(this.originalCode || '', state.node.start),
+                        scope: state.scope.properties
+                    });
+                }
+                this.onDebug = null;
             }
             return;
         }
 
-        if (this.currentState && this.currentState.node.type == 'Program' && !this.currentState.node.body.length) {
-            !scriptFinished && setTimeout(() => {
-                this.run();
+        if (counter++ > breakLimit) {
+            //Break after ~1s to make able pause
+            setTimeout(() => {
+                !this.paused_ && this.run();
             }, 0);
             return;
         }
@@ -3335,14 +3341,14 @@ Interpreter.prototype['stepCallExpression'] = function (stack, state, node) {
                 isAsync          = false;
             var callback         = function (value) {
                 state.value             = value;
-                thisInterpreter.paused_ = false;
+                thisInterpreter.awaitExternalExecute_ = false;
                 isAsync && thisInterpreter.run();
             };
             // Force the argument lengths to match, then append the callback.
             var argLength        = func.asyncFunc.length - 1;
             var argsWithCallback = state.arguments_.slice();
             argsWithCallback.push(callback);
-            this.paused_ = true;
+            this.awaitExternalExecute_ = true;
             func.asyncFunc.apply(state.funcThis_, argsWithCallback);
             isAsync = true;
             return;

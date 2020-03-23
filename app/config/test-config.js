@@ -15,19 +15,11 @@ module.exports = {
             isAdmin: false,
             api: 'Character',
             content: `
-                var i =0;
-                var a = function(){
-                    i++;
-                    console.log('a', i);
-                };
-                function b(){
-                    i++;
-                    console.log('b', i);
-                }
-                a();
-                b();
-                i++;
-                console.log('finish', i);
+                move(1);
+                move(1);
+                move(1);
+                move(1);
+                move(1);  
             `
         }
     ],
