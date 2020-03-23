@@ -6,7 +6,8 @@
     ],
     "verbose": true,
     "watch": [
-        "app/"
+        "app/",
+        "vendor/"
     ],
     "env": {
         "NODE_ENV": "development"

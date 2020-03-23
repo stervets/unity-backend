@@ -32,6 +32,7 @@
  * @constructor
  */
 var Interpreter = function(code, opt_initFunc) {
+  this.originalCode = code;
   if (typeof code === 'string') {
     code = acorn.parse(code, Interpreter.PARSE_OPTIONS);
   }
@@ -250,9 +251,7 @@ Interpreter.prototype.step = function() {
     return true;
   }
   try {
-      if (state.debug){
-          console.log(type, this.stepFunctions_[type]);
-      }
+    this.currentState = state;
     var nextState = this.stepFunctions_[type](stack, state, node);
   } catch (e) {
     // Eat any step errors.  They have been thrown on the stack.
@@ -276,12 +275,13 @@ Interpreter.prototype.step = function() {
  * @return {boolean} True if a execution is asynchronously blocked,
  *     false if no more instructions.
  */
-Interpreter.prototype.run = function(oneStep) {
+Interpreter.prototype.run = function() {
   var scriptFinished;
-  while((!this.paused_ || oneStep) && !scriptFinished){
+  while(!this.paused_ && !scriptFinished){
       try{
           scriptFinished = !this.step();
       }catch(e){
+          console.log('ERROR', e);
           this.onRuntimeError && this.onRuntimeError(e);
       }
 
@@ -294,6 +294,13 @@ Interpreter.prototype.run = function(oneStep) {
                   scope: state.scope.properties
               });
           }
+          return;
+      }
+
+      if (this.currentState && this.currentState.node.type == 'Program' && !this.currentState.node.body.length){
+          !scriptFinished && setTimeout(()=>{
+              this.run();
+          }, 0);
           return;
       }
   }
@@ -2889,6 +2896,17 @@ Interpreter.prototype.unwind = function(type, value, label) {
     realError = String(value);
   }
 
+    if (!(typeof realError == 'object')) {
+        realError = {
+            message: realError.toString()
+        }
+    }
+
+    if (this.currentState && this.currentState.node && this.currentState.node.start != null) {
+        realError.loc = acorn.getLineInfo(this.originalCode || '', this.currentState.node.start);
+        realError.message += ` (${realError.loc.line}:${realError.loc.column})`;
+    }
+
   throw realError;
 };
 
@@ -3320,6 +3338,7 @@ Interpreter.prototype['stepContinueStatement'] = function(stack, state, node) {
 
 Interpreter.prototype['stepDebuggerStatement'] = function(stack, state, node) {
   // Do nothing.  May be overridden by developers.
+    console.log('DEBUGGER!');
   stack.pop();
 };
 

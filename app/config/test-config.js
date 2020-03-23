@@ -15,46 +15,19 @@ module.exports = {
             isAdmin: false,
             api: 'Character',
             content: `
-                console.log('Script started');
-                
-                var i = 0;
-                while(true){
-                    move(1);
-                    move(1);
-                    turn(DIRECTION.BACK);
-                    //console.log(i++);
+                var i =0;
+                var a = function(){
+                    i++;
+                    console.log('a', i);
+                };
+                function b(){
+                    i++;
+                    console.log('b', i);
                 }
-                
-                while(false){
-                move(4);
-                turn(DIRECTION.LEFT);
-                move(2);
-                push();
-                
-                turn(DIRECTION.BACK);
-                move(2);
-                turn(DIRECTION.LEFT);
-                move(2);
-                
-                wait(500);
-                
-                turn(DIRECTION.BACK);
-                move(2);
-                turn(DIRECTION.RIGHT);
-                move(2);
-                push();
-                
-                turn(DIRECTION.BACK);
-                move(2);
-                
-                turn(DIRECTION.RIGHT);
-                move(4);
-                turn(DIRECTION.BACK);
-                wait(500);
-               
-                }
-                
-                console.log('Script finished');
+                a();
+                b();
+                i++;
+                console.log('finish', i);
             `
         }
     ],

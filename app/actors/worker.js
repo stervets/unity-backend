@@ -116,15 +116,6 @@ var Worker = {
         parentPort.postMessage({ com: 'callback', data, id });
     },
 
-    onRuntimeError(id) {
-        return (e) => {
-            this.response(id, {
-                message : e.message,
-                location: e.loc
-            });
-        };
-    },
-
     onDebug(data) {
         console.log('DEBUG DATA:');
         console.log("place", data.start, ' - ', data.end);

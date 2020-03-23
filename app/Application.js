@@ -122,7 +122,6 @@ module.exports = Backbone.Model.extend({
 
         RunAllScripts(socket, data) {
             if (socket.room) {
-                console.log(data);
                 var except = [];
                 if (data && data.except) {
                     except = data.except.toString().split(',').reduce((res, actorId) => {
