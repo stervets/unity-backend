@@ -1,18 +1,31 @@
 module.exports = function () {
     return {
-        /*
-        DIRECTION: {
-            RIGHT: 0,
-            DOWN: 1,
-            LEFT: 2,
-            UP: 3
-        },
-
-         */
-
         console: {
             log: function (data, resolve) {
+                var params = getParams(data);
                 resolve(console.log.apply(console, getParams(data)));
+                this.post('log', {
+                    type: 0,
+                    params
+                });
+            },
+
+            warn: function (data, resolve) {
+                var params = getParams(data);
+                resolve(console.log.apply(console, getParams(data)));
+                this.post('log', {
+                    type: 1,
+                    params
+                });
+            },
+
+            error: function (data, resolve) {
+                var params = getParams(data);
+                resolve(console.log.apply(console, getParams(data)));
+                this.post('log', {
+                    type: 2,
+                    params
+                });
             }
         },
 

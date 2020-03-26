@@ -1,7 +1,5 @@
 const { Worker } = require('worker_threads');
 
-const config = require('../config/test-config');
-
 const STATE = {
     STOPPED : 0,
     COMPILED: 1,
@@ -20,7 +18,8 @@ module.exports = Backbone.Model.extend({
     state: STATE.STOPPED,
 
     handlers: {
-        'destroy': 'onDestroy'
+        'destroy'          : 'onDestroy',
+        'change:scriptName': 'onChangeScriptName'
     },
 
     dataValidators: {},
@@ -36,6 +35,14 @@ module.exports = Backbone.Model.extend({
 
         async q(data) {
             this.postWorker('response', await this.room.sendQuery('unity', this, data.com, data.vars));
+        },
+
+        log(data) {
+            this.room.sendEvent('editor', 'log', {
+                actorId: this.id,
+                type: data.type,
+                data: data.params
+            });
         }
     },
 
@@ -44,6 +51,7 @@ module.exports = Backbone.Model.extend({
     // },
 
     onDestroy() {
+        this.room.sendEvent('editor', 'removeActor', this.id);
         this.script.stop(); //TODO check this is needed
         this.worker.terminate();
     },
@@ -73,34 +81,6 @@ module.exports = Backbone.Model.extend({
         this.worker.postMessage({ com, data });
     },
 
-    /*
-     runScript(script) {
-     script != null && (this.script = script);
-     this.script = this.script.trim();
-     if (this.script) {
-     this.postMessage('runScript', {
-     script: this.script,
-     //environment: {}
-     });
-     } else {
-     console.log('Script is empty');
-     }
-     },
-
-     compileScript(script) {
-     script != null && (this.script = script);
-     this.script = this.script.trim();
-     if (this.script) {
-     this.postMessage('compileScript', {
-     script: this.script
-     //environment: {}
-     });
-     } else {
-     console.log('Script is empty');
-     }
-     },
-     */
-
     async onWorkerMessage(data, id) {
         this.workerHandlers[data.com] && this.workerHandlers[data.com].call(this, data.data, data.id);
     },
@@ -109,21 +89,33 @@ module.exports = Backbone.Model.extend({
         if (error) {
             console.log(`${errorType} ERROR:`, error.message);
             error.location && console.log(error.location);
+            this.room.sendEvent('editor', 'setState', {
+                actorId: this.id,
+                state: STATE.STOPPED
+            });
+
+            this.room.sendEvent('editor', 'log', {
+                actorId: this.id,
+                type: 2,
+                location: error.location,
+                data: [`${errorType} ERROR:`, error.message]
+            });
         } else {
             console.log(errorType, 'COMPLETE');
         }
         return error;
     },
 
+    /*
     async testRun() {
         var script = await loadScript('CharacterFemale');
 
         !this.handleError('COMPILE', await this.requestWorker('compile', {
             script,
-            api: config.api.Character
+            //api: config.api.Character
         })) &&
         (() => {
-            /*
+
              setTimeout(() => {
              console.log('PAUSE');
              this.postWorker('pause');
@@ -138,7 +130,7 @@ module.exports = Backbone.Model.extend({
              console.log('STOP');
              this.postWorker('stop');
              }, 5000);
-             */
+
             return true;
         })() &&
         this.handleError('RUNTIME', await this.requestWorker('run'));
@@ -148,30 +140,52 @@ module.exports = Backbone.Model.extend({
         //     this.handleError('RUNTIME', await this.requestWorker('run'));
         // }, 1000);
     },
+*/
 
     script: {
-        async compile() {
+        async compile(script) {
+            !script && (script = this.linkedScript && this.linkedScript.content || this.get('script') || '');
             return this.requestWorker('compile', {
-                script: this.get('script'),
-                api   : this.get('api') //config.api.Character
+                script,
+                api: this.get('api')
             });
         },
 
         run(doNotRun) {
+            this.room.sendEvent('editor', 'setState', {
+                actorId: this.id,
+                state: STATE.RUNNING
+            });
+
             return this.requestWorker('run', {
                 run: !doNotRun
             });
         },
 
         stop() {
+            this.room.sendEvent('editor', 'setState', {
+                actorId: this.id,
+                state: STATE.STOPPED
+            });
+
             this.postWorker('stop');
         },
 
         resume() {
+            this.room.sendEvent('editor', 'setState', {
+                actorId: this.id,
+                state: STATE.RUNNING
+            });
+
             this.postWorker('resume');
         },
 
         step() {
+            this.room.sendEvent('editor', 'setState', {
+                actorId: this.id,
+                state: STATE.PAUSED
+            });
+
             return this.requestWorker('step');
         }
     },
@@ -203,7 +217,9 @@ module.exports = Backbone.Model.extend({
         this.state = STATE.STOPPED;
     },
 
-    async scriptRun(doNotRun) {
+    async scriptRun(script, doNotRun) {
+        script && typeof script == 'object' && (script = script[this.get('scriptName')]);
+
         var error = null;
         if (this.state > STATE.RUNNING) {
             this.state = STATE.RUNNING;
@@ -216,7 +232,7 @@ module.exports = Backbone.Model.extend({
         }
 
         if (this.state < STATE.COMPILED) {
-            if ((error = this.handleError('COMPILE', await this.script.compile()))) {
+            if ((error = this.handleError('COMPILE', await this.script.compile(script)))) {
                 return error;
             }
             this.state = STATE.COMPILED;
@@ -234,18 +250,27 @@ module.exports = Backbone.Model.extend({
         return error;
     },
 
-    async scriptStep() {
+    async scriptStep(script) {
         var error;
         if (this.state < STATE.RUNNING) {
-            if (error = await this.scriptRun(true)) {
+            if (error = await this.scriptRun(script, true)) {
                 return error;
             }
         }
 
-        this.state = STATE.PAUSED;
+        this.state    = STATE.PAUSED;
         var debugData = await this.script.step();
         debugData && console.log(`${debugData.loc.line}:${debugData.loc.column} >`, debugData.scope);
         return debugData;
+    },
+
+    onChangeScriptName() {
+        var scriptName = (this.get('scriptName') || '').trim();
+        if ((this.linkedScript = !!scriptName)) {
+            this.linkedScript = this.room.config.scripts.find((script) => {
+                return scriptName == script.name;
+            });
+        }
     },
 
     launch() {
@@ -257,12 +282,14 @@ module.exports = Backbone.Model.extend({
 
         this.callbacks = {};
         this.room      = this.collection.room;
-        this.worker    = new Worker('./app/actors/worker.js');
+        this.onChangeScriptName();
+
+        this.worker = new Worker('./app/actors/worker.js');
         this.worker.on('message', this.onWorkerMessage);
 
-        //if (this.get('autorun')) {
-        //this.startWithLog();
-        //}
+        this.room.sendEvent('editor', 'addActor', this.toJSON());
+
+        this.get('autorun') && this.scriptRun();
     }
 });
 

@@ -20,7 +20,9 @@ module.exports = Backbone.Model.extend({
 
     loadUnityLevel() {
         if (this.config && this.unityClient && this.editorClient) {
+            this.destroyAllActors();
             this.send('unity', 'loadLevel', this.config.level);
+            this.sendEvent('editor', 'levelLoaded', this.config.level);
         }
     },
 
@@ -33,12 +35,10 @@ module.exports = Backbone.Model.extend({
 
         if (client.isUnityClient()) {
             if (this.unityClient) {
-                this.destroyAllActors();
                 this.unityClient.socket.disconnect();
                 this.unityClient.destroy();
             }
             this.unityClient = addedCliend;
-            this.loadUnityLevel();
         }
 
         if (client.isEditorClient()) {
@@ -47,9 +47,9 @@ module.exports = Backbone.Model.extend({
                 this.editorClient.destroy();
             }
             this.editorClient = addedCliend;
-            this.loadUnityLevel();
         }
 
+        this.loadUnityLevel();
         //isUnityClient && (this.unityClient = addedCliend);
         //isEditorClient && (this.editorClient = addedCliend);
     },
@@ -105,15 +105,29 @@ module.exports = Backbone.Model.extend({
     },
 
     registerAPI(config) {
-        this.config = config;
+        this.config         = config;
+        this.config.scripts = this.config.scripts || [];
         this.loadUnityLevel();
         console.log(`Config ${config.level} loaded`);
     },
 
-    runAllScripts(except) {
-        except = except || [];
+    runAllScripts(except, scripts) {
+        except  = except || [];
+        scripts = scripts || [];
+
+        if (Array.isArray(scripts)) {
+            scripts = scripts.reduce((res, script) => {
+                res[script.name] = script.content;
+                return res;
+            }, {});
+        }
+
         this.actors.forEach(async (actor) => {
-            !~except.indexOf(actor.id) && actor.scriptRun();
+            !~except.indexOf(actor.id) && actor.scriptRun(scripts);
+        });
+
+        this.send('unity', 'play', {
+            com: 'play'
         });
     },
 
@@ -122,6 +136,10 @@ module.exports = Backbone.Model.extend({
             actor.resolve = resolve;
             this.application.sendRoomQuery(`${this.id}-${clientType}`, actor.id, com, vars);
         });
+    },
+
+    sendEvent(clientType, com, vars) {
+        this.application.sendRoomEvent(`${this.id}-${clientType}`, com, vars);
     },
 
     send(clientType, com, vars) {
@@ -136,8 +154,5 @@ module.exports = Backbone.Model.extend({
     },
 
     launch() {
-        // this.addActor({
-        //     id: 0
-        // });
     }
 });

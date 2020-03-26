@@ -32,10 +32,5 @@ module.exports = Backbone.Model.extend({
 
     async syncEditorClient() {
         //await this.send('scripts', this.room.actors.toJSON());
-    },
-
-    start() {
-        //this.get('type') == 'unity' && this.syncUnityClient();
-        //this.get('type') == 'editor' && this.syncEditorClient();
     }
 });

@@ -15,11 +15,14 @@ module.exports = {
             isAdmin: false,
             api: 'Character',
             content: `
-                move(1);
-                move(1);
-                move(1);
-                move(1);
-                move(1);  
+               var count = 0;
+               
+               while(++count){
+                 move(1);
+                 console.log(count);
+                 turn(DIRECTION.BACK);
+                 testFunc(Math.random());
+               }
             `
         }
     ],

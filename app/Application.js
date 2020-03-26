@@ -46,7 +46,6 @@ module.exports = Backbone.Model.extend({
                 socket.room.registerAPI(TestUserConfig);
             }
 
-            client.start();
             console.log(`Client "${client.get('type')}" in room ${room.id} started`);
         },
 
@@ -78,24 +77,26 @@ module.exports = Backbone.Model.extend({
 
         FinishLevel(socket, data) {
             if (socket.room) {
-                console.log("FINISHED LEVEL!");
+                socket.room.sendEvent('editor', 'levelComplete');
             }
         },
+
+        removeActor(socket, data) {
+            if (socket.room) {
+                var actor = socket.room.actors.get(data.id);
+                if (actor) {
+                    actor.destroy();
+                } else {
+                    console.warn(`Actor ${data.id} not found`);
+                }
+            } else {
+                console.warn("Socket has no room");
+            }
+        },
+
         addActor(socket, data) {
             if (socket.room) {
-
                 if (socket.room.config) {
-                    var script = socket.room.config.scripts.find((script) => {
-                        return data.script == script.name;
-                    });
-
-                    if (script) {
-                        script = script.content;
-                    } else {
-                        console.log(`Script "${data.script}" not found`);
-                        return;
-                    }
-
                     var apiName = data.api.split('_')[1], api;
                     if (!(api = socket.room.config.api[apiName])) {
                         console.log(`API "${apiName}" not found`);
@@ -106,7 +107,6 @@ module.exports = Backbone.Model.extend({
                         id        : data.id,
                         name      : data.name,
                         api,
-                        script,
                         scriptName: data.script,
                         autorun   : !!data.autorun
                     });
@@ -120,19 +120,27 @@ module.exports = Backbone.Model.extend({
             }
         },
 
+        ReloadLevel(socket, data) {
+            if (socket.room) {
+                socket.room.loadUnityLevel();
+            } else {
+                console.warn("Socket has no room");
+            }
+        },
+
+        CaptureKeyboard(socket, capture) {
+            if (socket.room) {
+                socket.room.send('unity', 'captureKeyboard', {
+                    capture: !!capture
+                });
+            } else {
+                console.warn("Socket has no room");
+            }
+        },
+
         RunAllScripts(socket, data) {
             if (socket.room) {
-                var except = [];
-                if (data && data.except) {
-                    except = data.except.toString().split(',').reduce((res, actorId) => {
-                        actorId = parseInt(actorId.trim());
-                        if (actorId && !~except.indexOf(actorId)) {
-                            res.push(actorId);
-                        }
-                        return res;
-                    }, []);
-                }
-                socket.room.runAllScripts(except);
+                socket.room.runAllScripts(data.except, data.scripts);
             } else {
                 console.warn("Socket has no room");
             }
@@ -146,13 +154,13 @@ module.exports = Backbone.Model.extend({
 
         ScriptRun(socket, data) {
             this.checkActorAndRun(socket, data, (actor) => {
-                actor.scriptRun();
+                actor.scriptRun(data.script);
             });
         },
 
         ScriptStep(socket, data) {
             this.checkActorAndRun(socket, data, (actor) => {
-                actor.scriptStep();
+                actor.scriptStep(data.script);
             });
         },
 
@@ -228,8 +236,15 @@ module.exports = Backbone.Model.extend({
         this.io.to(socketRoom).emit('q', data);
     },
 
+    sendRoomEvent(socketRoom, com, vars) {
+        var data = {
+            com,
+            vars
+        };
+        this.io.to(socketRoom).emit('e', data);
+    },
+
     sendRoom(socketRoom, com, vars) {
-        console.log('sendRoom', com, vars);
         this.io.to(socketRoom).emit(com, vars);
     },
 

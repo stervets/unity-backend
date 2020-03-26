@@ -99,16 +99,16 @@ const registerEnvironment = function (environment) {
         register(environment, scope);
     };
 };
-var restrictedProperties = [
-    'NaN',         'Infinity',   'undefined',
-    'window',      'this',       'self',
-    'Function',    'Object',     'Array',
-    'String',      'Boolean',    'Number',
-    'Date',        'RegExp',     'Error',
-    'EvalError',   'RangeError', 'ReferenceError',
-    'SyntaxError', 'TypeError',  'URIError',
-    'Math',        'JSON',       'eval',
-    'parseInt',    'parseFloat', 'isNaN',
+var restrictedProperties  = [
+    'NaN', 'Infinity', 'undefined',
+    'window', 'this', 'self',
+    'Function', 'Object', 'Array',
+    'String', 'Boolean', 'Number',
+    'Date', 'RegExp', 'Error',
+    'EvalError', 'RangeError', 'ReferenceError',
+    'SyntaxError', 'TypeError', 'URIError',
+    'Math', 'JSON', 'eval',
+    'parseInt', 'parseFloat', 'isNaN',
     'isFinite', 'console'
 ];
 
@@ -122,6 +122,10 @@ var Worker = {
             };
             parentPort.postMessage({ com, data });
         });
+    },
+
+    post(com, data) {
+        parentPort.postMessage({ com, data });
     },
 
     response(id, data) {
@@ -155,7 +159,7 @@ var Worker = {
         },
 
         compile(data, id) {
-            var api          = data.api || {};
+            var api = data.api || {};
 
             api = _.extend(
                 api.properties || {},
@@ -212,38 +216,34 @@ var Worker = {
 
         stop() {
             if (Interpreter.isRunning) {
-                //Interpreter.paused = true;
+                Interpreter.paused_ = true;
                 Interpreter.isRunning = false;
                 Interpreter.onFinish && Interpreter.onFinish();
                 unityResponse && unityResponse();
             }
         },
-/*
-        pause(data, id) {
-            Interpreter.onDebug = (data) => {
-                // console.log('DEBUG DATA:');
-                // console.log("place", data.start, ' - ', data.end);
-                // console.log("I = ", data.scope.i);
-                this.response(id, data.scope);
-            };
-            //console.log('STOP', Interpreter.paused_);
-            Interpreter.paused  = true;
-        },
-*/
+        /*
+         pause(data, id) {
+         Interpreter.onDebug = (data) => {
+         // console.log('DEBUG DATA:');
+         // console.log("place", data.start, ' - ', data.end);
+         // console.log("I = ", data.scope.i);
+         this.response(id, data.scope);
+         };
+         //console.log('STOP', Interpreter.paused_);
+         Interpreter.paused  = true;
+         },
+         */
         step(data, id) {
             Interpreter.onDebug = (data) => {
                 // console.log('DEBUG DATA:');
                 // console.log("place", data.start, ' - ', data.end);
                 //console.log("I = ", data.scope.i, '->', data.scope.asd);
-                //console.log(getParams([data.scope]));
-                data && (data.scope = Object.keys(data.scope).reduce((res, key)=>{
+                data && (data.scope = Object.keys(data.scope).reduce((res, key) => {
                     var value = data.scope[key];
                     if (!~restrictedProperties.indexOf(key) &&
-                        typeof value != 'function' && typeof value != 'undefined'){
-                        //console.log('K', key, 'V', value);
-                        //console.log('TYPE>',typeof  value);
-                        if (value.toString() != '[object Function]'){
-                            //value = typeof value == 'number' || typeof value == 'boolean' ? value : value.toString();
+                        typeof value != 'function' && typeof value != 'undefined') {
+                        if (value == null || value.toString() != '[object Function]') {
                             res[key] = Interpreter.pseudoToNative(value);
                         }
                     }
@@ -253,14 +253,13 @@ var Worker = {
                 this.response(id, data);
             };
 
-            if (Interpreter.paused_){
+            if (Interpreter.paused_) {
                 Interpreter.run();
             }
             Interpreter.paused_ = true;
         },
 
         resume() {
-            //console.log('RESUME', Interpreter.paused_);
             Interpreter.paused_ = false;
             Interpreter.run();
         }
