@@ -239,33 +239,43 @@ Interpreter.prototype.appendCode = function (code) {
  * @return {boolean} True if a step was executed, false if no more instructions.
  */
 Interpreter.prototype.step = function () {
-    var stack = this.stateStack;
-    var state = stack[stack.length - 1];
-    if (!state) {
-        return false;
-    }
-    var node = state.node, type = node['type'];
-    if (type === 'Program' && state.done) {
-        return false;
-    }
-    try {
-        this.currentState = state;
-        var nextState     = this.stepFunctions_[type](stack, state, node);
-    } catch (e) {
-        // Eat any step errors.  They have been thrown on the stack.
-        if (e !== Interpreter.STEP_ERROR) {
-            // Uh oh.  This is a real error in the JS-Interpreter.  Rethrow.
-            throw e;
+    return new Promise(async (resolve)=>{
+        var stack = this.stateStack;
+        var state = stack[stack.length - 1];
+        if (!state) {
+            resolve(false);
+            return false;
         }
-    }
-    if (nextState) {
-        stack.push(nextState);
-    }
-    if (!node['end']) {
-        // This is polyfill code.  Keep executing until we arrive at user code.
-        return this.step();
-    }
-    return true;
+        var node = state.node, type = node['type'];
+        if (type === 'Program' && state.done) {
+            resolve(false);
+            return false;
+        }
+        try {
+            this.currentState = state;
+            var nextState = this.stepFunctions_[type](stack, state, node);
+            if (nextState instanceof Promise){
+                nextState = await nextState;
+                //nextState = null;
+            }
+        } catch (e) {
+            // Eat any step errors.  They have been thrown on the stack.
+            if (e !== Interpreter.STEP_ERROR) {
+                // Uh oh.  This is a real error in the JS-Interpreter.  Rethrow.
+                throw e;
+            }
+        }
+        if (nextState) {
+            stack.push(nextState);
+        }
+        if (!node['end']) {
+            // This is polyfill code.  Keep executing until we arrive at user code.
+            resolve(await this.step());
+            return;
+        }
+
+        resolve(true);
+    });
 };
 
 /**
@@ -273,22 +283,22 @@ Interpreter.prototype.step = function () {
  * @return {boolean} True if a execution is asynchronously blocked,
  *     false if no more instructions.
  */
-Interpreter.prototype.run = function () {
+Interpreter.prototype.run = async function () {
     const breakLimit = 6000000;
     var scriptFinished,
         counter      = 0;
     while (!scriptFinished && !this.awaitExternalExecute_) {
         try {
-            scriptFinished = !this.step();
+            scriptFinished = !(await this.step());
         } catch (e) {
             this.onRuntimeError && this.onRuntimeError(e);
         }
 
         if (this.paused_) {
             if (this.onDebug) {
-                if (scriptFinished){
+                if (scriptFinished) {
                     this.onDebug(null);
-                }else {
+                } else {
                     var state = this.stateStack[this.stateStack.length - 1];
                     this.onDebug({
                         start: state.node.start,
@@ -3337,6 +3347,17 @@ Interpreter.prototype['stepCallExpression'] = function (stack, state, node) {
         } else if (func.nativeFunc) {
             state.value = func.nativeFunc.apply(state.funcThis_, state.arguments_);
         } else if (func.asyncFunc) {
+            var prom = new Promise((resolve)=>{
+                var argsWithCallback = state.arguments_.slice();
+                argsWithCallback.push((value)=>{
+                    state.value             = value;
+                    resolve();
+                });
+                func.asyncFunc.apply(state.funcThis_, argsWithCallback);
+            });
+
+            return prom;
+            /*
             var thisInterpreter  = this,
                 isAsync          = false;
             var callback         = function (value) {
@@ -3352,6 +3373,7 @@ Interpreter.prototype['stepCallExpression'] = function (stack, state, node) {
             func.asyncFunc.apply(state.funcThis_, argsWithCallback);
             isAsync = true;
             return;
+            */
         } else {
             /* A child of a function is a function but is not callable.  For example:
              var F = function() {};

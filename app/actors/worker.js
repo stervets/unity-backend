@@ -75,6 +75,13 @@ global.getParams = (data) => {
 
 var unityResponse = null;
 
+/*
+var inspector = require('inspector');
+inspector.open('10220', null, true);
+*/
+
+
+var _interpreterInstance;
 const registerEnvironment = function (environment) {
     return function (interpreter, scope) {
         var register = (environment, scope) => {
@@ -83,16 +90,37 @@ const registerEnvironment = function (environment) {
                     interpreter.setProperty(scope, name, interpreter.createObjectProto({}));
                     register(environment[name], scope.properties[name]);
                 } else {
-                    interpreter.setProperty(scope, name,
-                        typeof environment[name] == 'function' ?
-                        interpreter.createAsyncFunction(function (...attrs) {
-                            const callback = attrs.pop();
-                            environment[name].call(Worker, attrs, callback, (message) => {
-                                //TODO: Make reject handler (throwException in interpreter?)
-                                console.warn('Script execution error:', message);
-                            }, interpreter);
-
-                        }) : environment[name]);
+                    if (typeof environment[name] == 'function') {
+                        interpreter.setProperty(scope, name,
+                            interpreter.createAsyncFunction(function (...attrs) {
+                                const callback = attrs.pop();
+                                environment[name].call(Worker, attrs, callback, (message) => {
+                                    //TODO: Make reject handler (throwException in interpreter?)
+                                    console.warn('Script execution error:', message);
+                                }, interpreter);
+                            }));
+                    } else {
+                        if (typeof environment[name] == 'string'){
+                            if (!environment[name].indexOf('getter:')){
+                                let getter = environment[name].slice(7);
+                                interpreter.setProperty(scope, name, JSInterpreter.Interpreter.VALUE_IN_DESCRIPTOR, {
+                                    get: interpreter.createAsyncFunction(async function (...attrs) {
+                                        const callback = attrs.pop();
+                                        callback(await Worker.postMessage('q', {
+                                            com : getter,
+                                            vars: []
+                                        }).catch(()=>{
+                                            callback();
+                                        }));
+                                    })
+                                });
+                            }else{
+                                interpreter.setProperty(scope, name, environment[name]);
+                            }
+                        }else{
+                            interpreter.setProperty(scope, name, environment[name]);
+                        }
+                    }
                 }
             });
         };
@@ -184,7 +212,7 @@ var Worker = {
 
             Environment = registerEnvironment(_.extend(common(), api));
             try {
-                Interpreter = new JSInterpreter.Interpreter(data.script, Environment);
+                _interpreterInstance = Interpreter = new JSInterpreter.Interpreter(data.script, Environment);
             } catch (e) {
                 //this.compileData = false;
                 this.response(id, {
@@ -216,7 +244,7 @@ var Worker = {
 
         stop() {
             if (Interpreter.isRunning) {
-                Interpreter.paused_ = true;
+                Interpreter.paused_   = true;
                 Interpreter.isRunning = false;
                 Interpreter.onFinish && Interpreter.onFinish();
                 unityResponse && unityResponse();
