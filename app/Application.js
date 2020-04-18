@@ -30,7 +30,8 @@ module.exports = Backbone.Model.extend({
 
             var client = new Clients.prototype.model({
                 id  : socket.id,
-                type: clientProps.type
+                type: clientProps.type,
+                development: !!clientProps.development
             });
 
             client.room       = room;
@@ -146,6 +147,18 @@ module.exports = Backbone.Model.extend({
             }
         },
 
+        onLevelLoaded(socket, data){
+            if (socket.room) {
+                socket.room.sendEvent('editor', 'levelLoaded', {
+                    result: data,
+                    metadata: socket.room.config && socket.room.config.metadata
+                });
+                socket.room.isLoadingLevel = false;
+            } else {
+                console.warn("Socket has no room");
+            }
+        },
+
         ScriptStop(socket, data) {
             this.checkActorAndRun(socket, data, (actor) => {
                 actor.scriptStop();
@@ -181,7 +194,6 @@ module.exports = Backbone.Model.extend({
                 console.warn('Wrong data in FE request');
                 return;
             }
-            console.log('RECEIVED DATA', request);
             if (this.feHandlers[request.com]) {
                 this.feHandlers[request.com].call(this, socket, request);
             } else {
@@ -232,7 +244,6 @@ module.exports = Backbone.Model.extend({
             com,
             vars
         };
-        console.log('sendRoomQuery', data);
         this.io.to(socketRoom).emit('q', data);
     },
 

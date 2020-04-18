@@ -18,16 +18,7 @@ var config = {
             properties: {
                 TANK  : 1,
                 TURRET: 2
-            },
-
-            getters: {
-                position: {
-                    x: 'getX',
-                    y: 'getY'
-                },
-
-                altitude: 'getAltitute'
-            },
+            }
         },
 
         Vehicle: {

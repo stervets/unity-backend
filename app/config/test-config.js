@@ -6,39 +6,36 @@
  */
 
 module.exports = {
-    level: 'scifi/level1',
+    title: 'my super level 1',
     desc : 'Pick up card and go to the door',
+
+    unity: {
+        name    : 'scifi/level1',
+        bundle  : '/o/Unity%2F888283_apple_512x512.png?alt=media&token=2982afd0-7724-4f76-aea3-546f505ffd87',
+        manifest: '/o/Unity%2F888283_apple_512x512.png?alt=media&token=2982afd0-7724-4f76-aea3-15234613',
+    },
 
     scripts: [
         {
             name   : 'CharacterController',
-            isAdmin: false,
             api    : 'Character',
             content: `
-            console.log('X1 = ', x);
-            console.log('X2 = ', x);
-            console.log('X3 = ', x);
-               move(1);
-               turn(1);
-               console.log('X4 = ', x);
-               push();
-               console.log('X5 = ', x);
-               turn(2);
-               push();
-               turn(2);
-               move(2);
-               turn(2);
-               move(2);
+                console.log('X1 = ', x);
+                move(4);
+                turn(2);
+                move(20);
+                push();
+                turn(3);
+                move(2);
+                turn(2);
+                move(3);
             `
         }
     ],
     api    : {
         Character: {
-            scripts   : [{
-                name   : 'CharacterController',
-                isAdmin: false,
-                content: 'asd'
-            }],
+            extends   : 'B',
+            isClass   : true,
             //TODO: think about make other functions injection (to another actor?)
             properties: {
                 x        : 'getter:push',

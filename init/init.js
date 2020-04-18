@@ -40,6 +40,80 @@ BackbonePrepare.push(function () {
     this.radio = radio;
 });
 
+global.deepCopy = (obj) => {
+    return JSON.parse(JSON.stringify(obj));
+};
+
+/*
+ Converts object
+ {
+ a : {
+ b1 : { c: 1 },
+ b2: 2
+ }
+ }
+ into
+ {
+ "a.b1.c": 1
+ "a.b2": 2
+ }
+ */
+
+/*
+ levelOptions can be a Number: means max level for flatness (0 is unlimited)
+
+ either it can be an object:
+ {
+ defaultLevel: 2, // default max level
+ levels: {
+ 'data.pivottable': 0 // unlimited for data.pivottable
+ 'data.style': 3 // max level 3 for data.style
+ },
+
+ disabled: [ // properties that will be excluded from flatten object
+ 'data.pivottable.conditionalformatting',
+ 'data.pivottable.manualColumnMove',
+ ]
+ }
+ */
+global.flattenObject = function (obj, levelOptions, _level, _concatPath, _overrideMaxLevel) {
+    var result   = {}, path, writeResult, realMaxLevel;
+    _concatPath  = _concatPath ? _concatPath + '.' : '';
+    levelOptions = levelOptions || 0;
+    _level       = _level || 1;
+    if (typeof levelOptions == 'object' && _overrideMaxLevel == null) {
+        _overrideMaxLevel = levelOptions.defaultLevel || 0;
+    }
+    for (var key in obj) {
+        path = _concatPath + key;
+        if (!obj.hasOwnProperty(key) || (_overrideMaxLevel != null && levelOptions.disabled && levelOptions.disabled.indexOf(path) >= 0)) continue;
+        writeResult = true;
+
+        if (typeof obj[key] == 'object') {
+            realMaxLevel = _overrideMaxLevel == null ? levelOptions :
+                           (levelOptions.levels[_concatPath + key] != null ? levelOptions.levels[path] : _overrideMaxLevel);
+            if (!realMaxLevel || _level < realMaxLevel) {
+                var flatObject = flattenObject(obj[key], levelOptions, _level + 1, path, _overrideMaxLevel == null ? null : realMaxLevel);
+                if (Object.keys(flatObject).length) {
+                    for (var resultPath in flatObject) {
+                        if (!flatObject.hasOwnProperty(resultPath)) continue;
+                        result[key + '.' + resultPath] = flatObject[resultPath];
+                    }
+                } else {
+                    result[key] = _.deepClone(obj[key]);
+                }
+
+                writeResult = false;
+            }
+        }
+
+        if (writeResult) {
+            result[key] = typeof obj[key] == 'object' ? _.deepClone(obj[key]) : obj[key];
+        }
+    }
+    return result;
+};
+
 global.loadScript = (name) => {
     return new Promise((resolve, reject) => {
         fs.readFile(`app/actors/scripts/${name}.js`, 'utf8', (err, data) => {

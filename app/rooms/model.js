@@ -19,10 +19,11 @@ module.exports = Backbone.Model.extend({
     },
 
     loadUnityLevel() {
-        if (this.config && this.unityClient && this.editorClient) {
+        if (!this.isLoadingLevel && this.config &&
+            (this.unityClient && (this.editorClient || this.unityClient.get('development')))) {
+            this.isLoadingLevel = true;
             this.destroyAllActors();
-            this.send('unity', 'loadLevel', this.config.level);
-            this.sendEvent('editor', 'levelLoaded', this.config.level);
+            this.send('unity', 'loadLevel', this.config.unity);
         }
     },
 
@@ -107,8 +108,44 @@ module.exports = Backbone.Model.extend({
     registerAPI(config) {
         this.config         = config;
         this.config.scripts = this.config.scripts || [];
-        this.loadUnityLevel();
-        console.log(`Config ${config.level} loaded`);
+        var api             = (this.config.api = this.config.api || {}),
+            loopControl     = 0;
+
+        var extend = (apiItem) => {
+            if (apiItem.extends && api[apiItem.extends] && loopControl++ < 1000) {
+                var parent        = extend(api[apiItem.extends]);
+                parent.properties = parent.properties || {};
+                parent.methods    = _.extend(parent.methods || {}, apiItem.methods);
+                var props         = flattenObject(apiItem.properties);
+                Object.keys(props).forEach((path) => {
+                    var pointer   = parent.properties,
+                        pathArray = path.split('.');
+                    pathArray.forEach((pathItem, index) => {
+                        if (index + 1 >= pathArray.length) { //last item
+                            pointer[pathItem] = props[path];
+                        } else {
+                            (typeof pointer[pathItem] != 'object') && (pointer[pathItem] = {});
+                            pointer = pointer[pathItem];
+                        }
+                    });
+                });
+                return parent;
+            }
+
+            return deepCopy(apiItem);
+        };
+
+        Object.keys(api).forEach((apiName) => {
+            loopControl             = 0;
+            api[apiName].properties = api[apiName].properties || {};
+            api[apiName].methods    = api[apiName].methods || {};
+            api[apiName].extends && (api[apiName] = extend(api[apiName], api[apiName].extends));
+        });
+
+        if (config.unity) {
+            this.loadUnityLevel();
+            console.log(`Config ${config.unity.name} loaded`);
+        }
     },
 
     runAllScripts(except, scripts) {
