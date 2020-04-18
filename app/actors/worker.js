@@ -76,10 +76,9 @@ global.getParams = (data) => {
 var unityResponse = null;
 
 /*
-var inspector = require('inspector');
-inspector.open('10220', null, true);
-*/
-
+ var inspector = require('inspector');
+ inspector.open('10220', null, true);
+ */
 
 var _interpreterInstance;
 const registerEnvironment = function (environment) {
@@ -100,8 +99,8 @@ const registerEnvironment = function (environment) {
                                 }, interpreter);
                             }));
                     } else {
-                        if (typeof environment[name] == 'string'){
-                            if (!environment[name].indexOf('getter:')){
+                        if (typeof environment[name] == 'string') {
+                            if (!environment[name].indexOf('getter:')) {
                                 let getter = environment[name].slice(7);
                                 interpreter.setProperty(scope, name, JSInterpreter.Interpreter.VALUE_IN_DESCRIPTOR, {
                                     get: interpreter.createAsyncFunction(async function (...attrs) {
@@ -109,15 +108,15 @@ const registerEnvironment = function (environment) {
                                         callback(await Worker.postMessage('q', {
                                             com : getter,
                                             vars: []
-                                        }).catch(()=>{
+                                        }).catch(() => {
                                             callback();
                                         }));
                                     })
                                 });
-                            }else{
+                            } else {
                                 interpreter.setProperty(scope, name, environment[name]);
                             }
-                        }else{
+                        } else {
                             interpreter.setProperty(scope, name, environment[name]);
                         }
                     }
@@ -167,17 +166,29 @@ var Worker = {
     },
 
     validators: {
-        int(param) {
-            return parseInt(param) || 0;
+        int(param, defaultValue) {
+            return (param == null && defaultValue != null ? parseInt(defaultValue) : parseInt(param)) || 0;
         },
-        float(param) {
-            return parseFloat(param) || 0;
+        float(param, defaultValue) {
+            return (param == null && defaultValue != null ? parseFloat(defaultValue) : parseFloat(param)) || 0;
         },
-        string(param) {
-            return param && param.toString && param.toString() || '';
+        string(param, defaultValue) {
+            return (param == null && defaultValue != null ?
+                    defaultValue && defaultValue.toString && defaultValue.toString() :
+                    param && param.toString && param.toString()) || '';
         },
-        bool(param) {
-            return !!param;
+        bool(param, defaultValue) {
+            return param == null && defaultValue != null ? !!defaultValue : !!param;
+        },
+        object(param, defaultValue) {
+            param == null && (param = defaultValue);
+            try {
+                typeof param == 'string' && (param = JSON.parse(param));
+                param = JSON.stringify(param);
+            } catch (e) {
+                param = "{}";
+            }
+            return param;
         }
     },
 
@@ -200,7 +211,7 @@ var Worker = {
                                 return [
                                     param.type,
                                     this.validators[param.type] ?
-                                    this.validators[param.type](data[index]) :
+                                    this.validators[param.type](data[index], param.default) :
                                     null
                                 ];
                             })

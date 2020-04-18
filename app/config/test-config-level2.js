@@ -22,8 +22,8 @@ var types  = {
                      return Math.random() * (max - min) + min;
                 }
                 
-                //move(20);
-                motor(1,1);
+                move();
+                //motor(1,1);
                 
                 while(false){
                     //motor(0,0);
@@ -32,6 +32,19 @@ var types  = {
                     console.log('Position', position.x, position.y, speed);
                     wait(Math.round(rand(2000, 4000)));
                     console.log('Speed', speed);
+                }
+            `
+            },
+
+
+            {
+                name   : 'TankBotController',
+                api    : 'Tank',
+                content: `
+                while(true){
+                    move(5);
+                    motor(1,-1);
+                    wait(2500);
                 }
             `
             }
@@ -45,7 +58,8 @@ var types  = {
                         x: 'getter:GetX',
                         y: 'getter:GetY'
                     },
-                    health: 'getter:GetHealth'
+                    health: 'getter:GetHealth',
+                    type : 'getter:Type'
                 }
             },
 
@@ -78,6 +92,35 @@ var types  = {
                         ]
                     },
 
+                    move: {
+                        desc  : 'Move vehicle forward or backward a set number of meters. Positive values indicate a forward movement, while negative indicates backward.',
+                        params: [
+                            {
+                                name: 'distance',
+                                type: 'float',
+                                desc: 'Distance to move'
+                            }
+                        ]
+                    },
+
+                    moveTo: {
+                        desc  : 'Move vehicle to given object',
+                        params: [
+                            {
+                                name: 'id',
+                                type: 'int',
+                                desc: 'Object id'
+                            },
+
+                            {
+                                name: 'distance',
+                                type: 'int',
+                                desc: 'Stop on specified distance',
+                                default: 2
+                            }
+                        ]
+                    },
+
                     moveToXY: {
                         desc  : 'Move vehicle to given coordinates',
                         params: [
@@ -95,19 +138,58 @@ var types  = {
                         ]
                     },
 
-                    move: {
-                        desc  : 'Move vehicle forward or backward a set number of meters. Positive values indicate a forward movement, while negative indicates backward.',
+                    turn: {
+                        desc  : 'Turn relative angle',
                         params: [
                             {
-                                name: 'distance',
+                                name: 'angle',
                                 type: 'float',
-                                desc: 'Distance to move'
+                                desc: 'Angle'
                             }
                         ]
                     },
 
-                    radar: {
-                        desc  : 'Search an object',
+                    turnTo: {
+                        desc  : 'Turn vehicle to given object',
+                        params: [
+                            {
+                                name: 'id',
+                                type: 'int',
+                                desc: 'Object id'
+                            }
+                        ]
+                    },
+
+                    turnToXY: {
+                        desc  : 'Turn vehicle to given coordinates',
+                        params: [
+                            {
+                                name: 'x',
+                                type: 'float',
+                                desc: 'X coord'
+                            },
+
+                            {
+                                name: 'y',
+                                type: 'float',
+                                desc: 'Y coord'
+                            }
+                        ]
+                    },
+
+                    turnAbsolute: {
+                        desc  : 'Turn absolute angle',
+                        params: [
+                            {
+                                name: 'angle',
+                                type: 'float',
+                                desc: 'Angle'
+                            }
+                        ]
+                    },
+
+                    scan: {
+                        desc  : 'Objects scanner',
                         params: [
                             {
                                 name: 'type',
@@ -117,14 +199,37 @@ var types  = {
                             {
                                 name   : 'angle',
                                 type   : 'int',
-                                desc   : 'Radar angle',
+                                desc   : 'Scanner angle',
                                 default: 360
                             },
                             {
                                 name   : 'distance',
                                 type   : 'float',
-                                desc   : 'Radar distance',
+                                desc   : 'Scanner distance',
                                 default: 1000
+                            }
+                        ]
+                    },
+
+                    createDummy: {
+                        desc  : 'Create dummy object on given coordinates',
+                        params: [
+                            {
+                                name: 'x',
+                                type: 'float',
+                                desc: 'X coord'
+                            },
+
+                            {
+                                name: 'y',
+                                type: 'float',
+                                desc: 'Y coord'
+                            },
+
+                            {
+                                name: 'destroyTimer',
+                                type: 'int',
+                                desc: 'Destroy after given milliseconds'
                             }
                         ]
                     },
@@ -136,14 +241,12 @@ var types  = {
                 extends   : 'Vehicle',
                 title     : 'My super tank',
                 properties: {
-                    type : types.TANK,
-                    color: 'red',
                     speed: 'getter:GetSpeed'
                 },
 
                 methods: {
                     shoot: {
-                        desc: 'Motor direct control'
+                        desc: 'Shoot weapon'
                     }
                 },
 
