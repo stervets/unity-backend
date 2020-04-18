@@ -100,7 +100,7 @@ global.flattenObject = function (obj, levelOptions, _level, _concatPath, _overri
                         result[key + '.' + resultPath] = flatObject[resultPath];
                     }
                 } else {
-                    result[key] = _.deepClone(obj[key]);
+                    result[key] = deepCopy(obj[key]);
                 }
 
                 writeResult = false;
@@ -108,7 +108,7 @@ global.flattenObject = function (obj, levelOptions, _level, _concatPath, _overri
         }
 
         if (writeResult) {
-            result[key] = typeof obj[key] == 'object' ? _.deepClone(obj[key]) : obj[key];
+            result[key] = typeof obj[key] == 'object' ? deepCopy(obj[key]) : obj[key];
         }
     }
     return result;

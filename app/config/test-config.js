@@ -34,8 +34,6 @@ module.exports = {
     ],
     api    : {
         Character: {
-            extends   : 'B',
-            isClass   : true,
             //TODO: think about make other functions injection (to another actor?)
             properties: {
                 x        : 'getter:push',
