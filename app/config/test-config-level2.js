@@ -16,10 +16,23 @@ var types  = {
         scripts: [
             {
                 name   : 'TankController',
-                isAdmin: false,
                 api    : 'Tank',
                 content: `
-               motor(1,1);
+                function rand(min, max) {
+                     return Math.random() * (max - min) + min;
+                }
+                
+                //move(20);
+                motor(1,1);
+                
+                while(false){
+                    //motor(0,0);
+                    moveToXY(Math.round(rand(-20, 20)), Math.round(rand(-20, 20)));
+                    motor(rand(-0.5, 0.5)*2, rand(-0.5, 0.5)*2);
+                    console.log('Position', position.x, position.y, speed);
+                    wait(Math.round(rand(2000, 4000)));
+                    console.log('Speed', speed);
+                }
             `
             }
         ],
@@ -27,7 +40,12 @@ var types  = {
         api: {
             Entity: {
                 properties: {
-                    TYPE: types
+                    TYPE: types,
+                    position: {
+                        x: 'getter:GetX',
+                        y: 'getter:GetY'
+                    },
+                    health: 'getter:GetHealth'
                 }
             },
 
@@ -56,6 +74,23 @@ var types  = {
                                 name: 'right',
                                 type: 'float',
                                 desc: 'Right motor'
+                            }
+                        ]
+                    },
+
+                    moveToXY: {
+                        desc  : 'Move vehicle to given coordinates',
+                        params: [
+                            {
+                                name: 'x',
+                                type: 'float',
+                                desc: 'X coord'
+                            },
+
+                            {
+                                name: 'y',
+                                type: 'float',
+                                desc: 'Y coord'
                             }
                         ]
                     },
@@ -102,7 +137,8 @@ var types  = {
                 title     : 'My super tank',
                 properties: {
                     type : types.TANK,
-                    color: 'red'
+                    color: 'red',
+                    speed: 'getter:GetSpeed'
                 },
 
                 methods: {

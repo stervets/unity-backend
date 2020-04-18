@@ -58,22 +58,41 @@ if (fs.statSync(UNITY_PATH).isDirectory()) {
             //console.log('check path', fs.statSync(path).isDirectory(), path);
             try {
                 fs.statSync(path).isDirectory();
-            }catch(e){
+            } catch (e) {
                 console.log('CREATE DIR', path);
                 fs.mkdirSync(path);
             }
 
             var dir = fs.opendirSync(path), file;
-            while(file = dir.readSync()){
+            while (file = dir.readSync()) {
                 if (file.isFile()) {
                     fs.unlinkSync(`${path}/${file.name}`);
                 }
             }
 
             Object.keys(config.api).forEach((apiName) => {
-                var filename   = `API_${apiName}`,
-                    methods    = config.api[apiName].methods || {},
-                    extendsApi = config.api[apiName].extends,
+                var filename = `API_${apiName}`,
+                    methods  = deepCopy(config.api[apiName].methods || {});
+
+                var findGetters = (properties, path) => {
+                    path = path || '';
+                    Object.keys(properties).forEach((key) => {
+                        if (typeof properties[key] == 'object') {
+                            findGetters(properties[key], path + key + '.');
+                        } else {
+                            if (typeof properties[key] == 'string' && !properties[key].indexOf('getter:')) {
+                                let getter      = properties[key].slice(7);
+                                methods[getter] = {
+                                    desc  : `Getter for this.${path + key}`,
+                                    params: []
+                                };
+                            }
+                        }
+                    });
+                };
+                findGetters(config.api[apiName].properties || {});
+
+                var extendsApi = config.api[apiName].extends,
                     content    = `/*     
     API: ${apiName}      
                   
