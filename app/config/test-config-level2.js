@@ -8,7 +8,7 @@ var types  = {
         desc : 'Pick up card and go to the door',
 
         unity: {
-            name    : 'scifi/level1',
+            name    : 'scifi/level2',
             bundle  : '/o/Unity%2F888283_apple_512x512.png?alt=media&token=2982afd0-7724-4f76-aea3-546f505ffd87',
             manifest: '/o/Unity%2F888283_apple_512x512.png?alt=media&token=2982afd0-7724-4f76-aea3-15234613',
         },

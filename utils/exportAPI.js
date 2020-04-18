@@ -49,22 +49,38 @@ var deepCopy      = (obj) => {
 
 if (fs.statSync(UNITY_PATH).isDirectory()) {
     configs.forEach((config) => {
-        var [realm, level] = config.level.split('/'),
+        var levelName      = config.unity.name;
+        var [realm, level] = levelName.split('/'),
             path           = `${UNITY_PATH}/Assets/Realms/${realm}/Levels/${level}`;
 
         if (fs.statSync(path).isDirectory()) {
             path += '/API';
-            !fs.statSync(path).isDirectory() && fs.mkdirSync(path);
+            //console.log('check path', fs.statSync(path).isDirectory(), path);
+            try {
+                fs.statSync(path).isDirectory();
+            }catch(e){
+                console.log('CREATE DIR', path);
+                fs.mkdirSync(path);
+            }
+
+            var dir = fs.opendirSync(path), file;
+            while(file = dir.readSync()){
+                if (file.isFile()) {
+                    fs.unlinkSync(`${path}/${file.name}`);
+                }
+            }
+
             Object.keys(config.api).forEach((apiName) => {
-                var filename = `API_${apiName}`,
-                    methods  = config.api[apiName].methods,
-                    content  = `/*     
+                var filename   = `API_${apiName}`,
+                    methods    = config.api[apiName].methods || {},
+                    extendsApi = config.api[apiName].extends,
+                    content    = `/*     
     API: ${apiName}      
                   
-    Level: ${config.level} 
+    Level: ${levelName} 
     ${config.desc}
 */
-public class ${filename} : ActorController {\n`;
+public class ${filename} : ${extendsApi ? 'API_' + extendsApi : 'ActorController'} {\n`;
 
                 content += Object.keys(methods).map((method) => {
                     var content = `
@@ -89,7 +105,7 @@ public class ${filename} : ActorController {\n`;
                 fs.writeFileSync(`${path}/${filename}.cs`, content);
             });
         } else {
-            console.log(`Path for ${config.level} not found: ${path}`);
+            console.log(`Path for ${levelName} not found: ${path}`);
         }
     });
 } else {
