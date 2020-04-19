@@ -242,6 +242,7 @@ var Worker = {
                     message : e.message,
                     location: e.loc
                 });
+                unityResponse && unityResponse();
             };
 
             Interpreter.onFinish = () => {

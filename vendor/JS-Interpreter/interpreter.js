@@ -262,7 +262,11 @@ Interpreter.prototype.step = function () {
             // Eat any step errors.  They have been thrown on the stack.
             if (e !== Interpreter.STEP_ERROR) {
                 // Uh oh.  This is a real error in the JS-Interpreter.  Rethrow.
-                throw e;
+                //throw e;
+                this.paused_   = true;
+                this.isRunning = false;
+                this.onRuntimeError && this.onRuntimeError(e);
+                return;
             }
         }
         if (nextState) {
