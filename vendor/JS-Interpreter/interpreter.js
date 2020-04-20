@@ -213,8 +213,9 @@ Interpreter.prototype.REGEXP_THREAD_TIMEOUT = 1000;
  * Add more code to the interpreter.
  * @param {string|!Object} code Raw JavaScript text or AST.
  */
-Interpreter.prototype.appendCode = function (code) {
+Interpreter.prototype.appendCode = function (code, scope) {
     var state = this.stateStack[0];
+    state.scope = scope || state.scope;
     if (!state || state.node['type'] !== 'Program') {
         throw Error('Expecting original AST to start with a Program node.');
     }
@@ -226,7 +227,7 @@ Interpreter.prototype.appendCode = function (code) {
     if (!code || code['type'] !== 'Program') {
         throw Error('Expecting new AST to start with a Program node.');
     }
-    this.populateScope_(code, state.scope);
+    this.populateScope_(code, scope || state.scope);
     // Append the new program to the old one.
     for (var i = 0, node; (node = code['body'][i]); i++) {
         state.node['body'].push(node);

@@ -29,7 +29,7 @@ global.runCallback = (interpreter, callback, ...attrs) => {
     _.extend(program, {
         end  : callback.node.end,
         start: callback.node.start,
-        scope: callback.parentScope
+        parentScope: callback.parentScope
     });
 
     _.extend(program.body[0], {
@@ -44,8 +44,8 @@ global.runCallback = (interpreter, callback, ...attrs) => {
     });
 
     var shouldRun = interpreter.stateStack[0].done;
-    interpreter.appendCode(program);
-    console.log('shouldRun?', shouldRun);
+
+    interpreter.appendCode(program, callback.parentScope);
     shouldRun && interpreter.run();
 };
 
@@ -76,10 +76,9 @@ global.getParams = (data) => {
 
 var unityResponse = null;
 
-/*
  var inspector = require('inspector');
  inspector.open('10220', null, true);
- */
+
 
 var _interpreterInstance;
 const registerEnvironment = function (environment) {

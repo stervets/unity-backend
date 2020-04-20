@@ -44,7 +44,7 @@ module.exports = function () {
         setTimeout(data, resolve, reject, interpreter) {
             setTimeout(resolve, 0, setTimeout(() => {
                 runCallback(interpreter, data[0]);
-            }, data[1]));
+            }, Interpreter.pseudoToNative(data[1]) || 0));
         },
 
         clearTimeout(data, resolve, reject, interpreter) {

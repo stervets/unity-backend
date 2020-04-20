@@ -12,10 +12,11 @@ var config = {
         TankController: {
             content: `
                 addEventListener('click', function(x, y){
-                    console.log('>', x, y);
-                    createDummy(x,y, 5);
-                    moveXY(x, y, function(){});
-                });                
+                   createDummy(x,y, 5);
+                   moveXY(x,y, function(){
+                        console.log('finished', x, y);
+                   });
+                });            
             `
         },
 
