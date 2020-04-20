@@ -11,9 +11,8 @@ var config = {
     scripts: {
         TankController: {
             content: `
-                move(10, function(){
-                    console.log('CALLBACK!');
-                });
+                move(10);
+                console.log(1111);
             `
         },
 
@@ -106,6 +105,12 @@ var config = {
                             type   : 'int',
                             desc   : 'Stop on specified distance',
                             default: 2
+                        },
+
+                        {
+                            name: 'callback',
+                            type: 'function',
+                            desc: 'Make move function async and call this function on finish'
                         }
                     ]
                 },
@@ -123,6 +128,12 @@ var config = {
                             name: 'y',
                             type: 'float',
                             desc: 'Y coord'
+                        },
+
+                        {
+                            name: 'callback',
+                            type: 'function',
+                            desc: 'Make move function async and call this function on finish'
                         }
                     ]
                 },

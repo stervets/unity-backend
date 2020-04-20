@@ -50,6 +50,13 @@ module.exports = Backbone.Model.extend({
     //     return this.room.send('unity', this, com, data);
     // },
 
+    runCallbackInAsyncFunction(callback, res){
+        this.postWorker('runCallbackInAsyncFunction', {
+            callback,
+            res
+        });
+    },
+
     onDestroy() {
         this.room.sendEvent('editor', 'removeActor', this.id);
         this.script.stop(); //TODO check this is needed
@@ -267,9 +274,7 @@ module.exports = Backbone.Model.extend({
     onChangeScriptName() {
         var scriptName = (this.get('scriptName') || '').trim();
         if ((this.linkedScript = !!scriptName)) {
-            this.linkedScript = this.room.config.scripts.find((script) => {
-                return scriptName == script.name;
-            });
+            this.linkedScript = this.room.config.scripts[scriptName];
         }
     },
 

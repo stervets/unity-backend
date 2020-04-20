@@ -107,7 +107,7 @@ module.exports = Backbone.Model.extend({
 
     registerAPI(config) {
         this.config         = config;
-        this.config.scripts = this.config.scripts || [];
+        this.config.scripts = this.config.scripts || {};
         var api             = (this.config.api = this.config.api || {}),
             loopControl     = 0;
 
@@ -150,14 +150,12 @@ module.exports = Backbone.Model.extend({
 
     runAllScripts(except, scripts) {
         except  = except || [];
-        scripts = scripts || [];
+        scripts = scripts || {};
 
-        if (Array.isArray(scripts)) {
-            scripts = scripts.reduce((res, script) => {
-                res[script.name] = script.content;
-                return res;
-            }, {});
-        }
+        scripts = Object.keys(scripts).reduce((res, name)=>{
+            res[name] = scripts[name].content;
+            return res;
+        }, {});
 
         this.actors.forEach(async (actor) => {
             !~except.indexOf(actor.id) && actor.scriptRun(scripts);

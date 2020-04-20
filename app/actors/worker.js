@@ -165,6 +165,8 @@ var Worker = {
         console.log("I = ", data.scope.i);
     },
 
+    callbacks: {},
+
     validators: {
         int(param, defaultValue) {
             return (param == null && defaultValue != null ? parseInt(defaultValue) : parseInt(param)) || 0;
@@ -192,7 +194,14 @@ var Worker = {
         },
         function(param, defaultValue) {
             param == null && (param = defaultValue || null);
-            return param;
+            if (param != null) {
+                let id;
+                while (this.callbacks[(id = Math.random())]) {
+                }
+                this.callbacks[id] = param;
+                return id.toString();
+            }
+            return '';
         }
     },
 
@@ -213,9 +222,9 @@ var Worker = {
                             com : methodName,
                             vars: params.map((param, index) => {
                                 return [
-                                    param.type,
+                                    param.type == 'object' || param.type == 'function' ? 'string' : param.type,
                                     this.validators[param.type] ?
-                                    this.validators[param.type](data[index], param.default) :
+                                    this.validators[param.type].call(this, data[index], param.default) :
                                     null
                                 ];
                             })
@@ -260,6 +269,7 @@ var Worker = {
 
         stop() {
             if (Interpreter.isRunning) {
+                this.callbacks        = {};
                 Interpreter.paused_   = true;
                 Interpreter.isRunning = false;
                 Interpreter.onFinish && Interpreter.onFinish();
@@ -306,8 +316,15 @@ var Worker = {
         resume() {
             Interpreter.paused_ = false;
             Interpreter.run();
-        }
+        },
 
+        runCallbackInAsyncFunction(data) {
+            if (this.callbacks[data.callback]){
+                data.res = Array.isArray(data.res) ? data.res : [data.res];
+                runCallback(Interpreter, this.callbacks[data.callback], ...data.res);
+                delete this.callbacks[data.callback];
+            }
+        }
     }
 };
 

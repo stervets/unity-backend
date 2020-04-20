@@ -177,6 +177,12 @@ module.exports = Backbone.Model.extend({
             });
         },
 
+        RunCallback(socket, data) {
+            this.checkActorAndRun(socket, data, (actor) => {
+                actor.runCallbackInAsyncFunction(data.callback, data.res);
+            });
+        },
+
         a(socket, data) {
             var actor = socket.room.actors.get(data.id);
             if (actor) {
