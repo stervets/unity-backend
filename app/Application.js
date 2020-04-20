@@ -107,6 +107,7 @@ module.exports = Backbone.Model.extend({
                     socket.room.addActor({
                         id        : data.id,
                         name      : data.name,
+                        apiName,
                         api,
                         scriptName: data.script,
                         autorun   : !!data.autorun

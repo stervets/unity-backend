@@ -138,11 +138,13 @@ module.exports = Backbone.Model.extend({
             return deepCopy(apiItem);
         };
 
+        this.metadata = {};
         Object.keys(api).forEach((apiName) => {
             loopControl             = 0;
             api[apiName].properties = api[apiName].properties || {};
             api[apiName].methods    = api[apiName].methods || {};
             api[apiName].extends && (api[apiName] = extend(api[apiName], api[apiName].extends));
+            this.metadata[apiName] = api[apiName].metadata;
         });
 
         if (config.unity) {
@@ -192,5 +194,6 @@ module.exports = Backbone.Model.extend({
     },
 
     launch() {
+        this.metadata = {};
     }
 });

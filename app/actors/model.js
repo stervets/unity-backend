@@ -13,6 +13,8 @@ module.exports = Backbone.Model.extend({
         scriptName: '',
         script    : '',
         api       : null,
+        apiName   : '',
+        metadata  : ''
     },
 
     state: STATE.STOPPED,
@@ -40,8 +42,8 @@ module.exports = Backbone.Model.extend({
         log(data) {
             this.room.sendEvent('editor', 'log', {
                 actorId: this.id,
-                type: data.type,
-                data: data.params
+                type   : data.type,
+                data   : data.params
             });
         }
     },
@@ -50,14 +52,14 @@ module.exports = Backbone.Model.extend({
     //     return this.room.send('unity', this, com, data);
     // },
 
-    runCallbackInAsyncFunction(callback, res){
+    runCallbackInAsyncFunction(callback, res) {
         this.postWorker('runCallbackInAsyncFunction', {
             callback,
             res
         });
     },
 
-    fireEvent(event, data){
+    fireEvent(event, data) {
         this.postWorker('fireEvent', {
             event,
             data
@@ -65,7 +67,10 @@ module.exports = Backbone.Model.extend({
     },
 
     onDestroy() {
-        this.room.sendEvent('editor', 'removeActor', this.id);
+        this.room.sendEvent('editor', 'removeActor', {
+            id      : this.id,
+            metadata: this.room.metadata[this.get('apiName')]
+        });
         this.script.stop(); //TODO check this is needed
         this.worker.terminate();
     },
@@ -104,15 +109,17 @@ module.exports = Backbone.Model.extend({
             console.log(`${errorType} ERROR:`, error.message);
             error.location && console.log(error.location);
             this.room.sendEvent('editor', 'setState', {
-                actorId: this.id,
-                state: STATE.STOPPED
+                actorId : this.id,
+                state   : STATE.STOPPED,
+                metadata: this.room.metadata[this.get('apiName')]
             });
 
             this.room.sendEvent('editor', 'log', {
-                actorId: this.id,
-                type: 2,
+                actorId : this.id,
+                type    : 2,
                 location: error.location,
-                data: [`${errorType} ERROR:`, error.message]
+                data    : [`${errorType} ERROR:`, error.message],
+                metadata: this.room.metadata[this.get('apiName')]
             });
         } else {
             console.log(errorType, 'COMPLETE');
@@ -121,40 +128,40 @@ module.exports = Backbone.Model.extend({
     },
 
     /*
-    async testRun() {
-        var script = await loadScript('CharacterFemale');
+     async testRun() {
+     var script = await loadScript('CharacterFemale');
 
-        !this.handleError('COMPILE', await this.requestWorker('compile', {
-            script,
-            //api: config.api.Character
-        })) &&
-        (() => {
+     !this.handleError('COMPILE', await this.requestWorker('compile', {
+     script,
+     //api: config.api.Character
+     })) &&
+     (() => {
 
-             setTimeout(() => {
-             console.log('PAUSE');
-             this.postWorker('pause');
-             }, 1000);
+     setTimeout(() => {
+     console.log('PAUSE');
+     this.postWorker('pause');
+     }, 1000);
 
-             setTimeout(() => {
-             console.log('RESUME');
-             this.postWorker('resume');
-             }, 3000);
+     setTimeout(() => {
+     console.log('RESUME');
+     this.postWorker('resume');
+     }, 3000);
 
-             setTimeout(() => {
-             console.log('STOP');
-             this.postWorker('stop');
-             }, 5000);
+     setTimeout(() => {
+     console.log('STOP');
+     this.postWorker('stop');
+     }, 5000);
 
-            return true;
-        })() &&
-        this.handleError('RUNTIME', await this.requestWorker('run'));
+     return true;
+     })() &&
+     this.handleError('RUNTIME', await this.requestWorker('run'));
 
-        // setTimeout(async () => {
-        //     console.log('RUN');
-        //     this.handleError('RUNTIME', await this.requestWorker('run'));
-        // }, 1000);
-    },
-*/
+     // setTimeout(async () => {
+     //     console.log('RUN');
+     //     this.handleError('RUNTIME', await this.requestWorker('run'));
+     // }, 1000);
+     },
+     */
 
     script: {
         async compile(script) {
@@ -167,8 +174,9 @@ module.exports = Backbone.Model.extend({
 
         run(doNotRun) {
             this.room.sendEvent('editor', 'setState', {
-                actorId: this.id,
-                state: STATE.RUNNING
+                actorId : this.id,
+                state   : STATE.RUNNING,
+                metadata: this.room.metadata[this.get('apiName')]
             });
 
             return this.requestWorker('run', {
@@ -178,8 +186,9 @@ module.exports = Backbone.Model.extend({
 
         stop() {
             this.room.sendEvent('editor', 'setState', {
-                actorId: this.id,
-                state: STATE.STOPPED
+                actorId : this.id,
+                state   : STATE.STOPPED,
+                metadata: this.room.metadata[this.get('apiName')]
             });
 
             this.postWorker('stop');
@@ -187,8 +196,9 @@ module.exports = Backbone.Model.extend({
 
         resume() {
             this.room.sendEvent('editor', 'setState', {
-                actorId: this.id,
-                state: STATE.RUNNING
+                actorId : this.id,
+                state   : STATE.RUNNING,
+                metadata: this.room.metadata[this.get('apiName')]
             });
 
             this.postWorker('resume');
@@ -196,8 +206,9 @@ module.exports = Backbone.Model.extend({
 
         step() {
             this.room.sendEvent('editor', 'setState', {
-                actorId: this.id,
-                state: STATE.PAUSED
+                actorId : this.id,
+                state   : STATE.PAUSED,
+                metadata: this.room.metadata[this.get('apiName')]
             });
 
             return this.requestWorker('step');
@@ -299,10 +310,14 @@ module.exports = Backbone.Model.extend({
         this.worker = new Worker('./app/actors/worker.js');
         this.worker.on('message', this.onWorkerMessage);
 
-        this.room.sendEvent('editor', 'addActor', this.toJSON());
+        var json = this.toJSON();
+        delete json.api;
+        this.room.sendEvent('editor', 'addActor', _.extend(json,
+            { metadata: this.room.metadata[this.get('apiName')] }));
 
         this.get('autorun') && this.scriptRun();
     }
-});
+})
+;
 
 
