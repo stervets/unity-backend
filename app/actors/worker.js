@@ -11,8 +11,8 @@ if (isMainThread) {
     throw new Error(`WORKER SHOULD NOT BE IN MAIN THREAD: ${__filename}`)
 }
 
-var Interpreter = null,
-    Environment = null;
+global.Interpreter = null;
+var Environment    = null;
 
 global.runCallback = (interpreter, callback, ...attrs) => {
     if (!(interpreter && interpreter.stateStack)) {
@@ -45,6 +45,7 @@ global.runCallback = (interpreter, callback, ...attrs) => {
 
     var shouldRun = interpreter.stateStack[0].done;
     interpreter.appendCode(program);
+    console.log('shouldRun?', shouldRun);
     shouldRun && interpreter.run();
 };
 
@@ -165,7 +166,25 @@ var Worker = {
         console.log("I = ", data.scope.i);
     },
 
-    callbacks: {},
+    addEventListener(name, callback) {
+        if (callback && callback.class == 'Function') {
+            this.eventListeners[name] = this.eventListeners[name] || [];
+            this.eventListeners[name].push(callback);
+        }
+    },
+
+    removeEventListener(name, callback) {
+        if (callback && this.eventListeners[name]) {
+            this.eventListeners[name] = this.eventListeners[name].filter((listener) => {
+                return callback != listener;
+            });
+        } else {
+            this.eventListeners[name] = [];
+        }
+    },
+
+    eventListeners: {},
+    callbacks     : {},
 
     validators: {
         int(param, defaultValue) {
@@ -194,7 +213,7 @@ var Worker = {
         },
         function(param, defaultValue) {
             param == null && (param = defaultValue || null);
-            if (param != null) {
+            if (param != null && param.class == 'Function') {
                 let id;
                 while (this.callbacks[(id = Math.random())]) {
                 }
@@ -270,6 +289,7 @@ var Worker = {
         stop() {
             if (Interpreter.isRunning) {
                 this.callbacks        = {};
+                this.eventListeners   = {};
                 Interpreter.paused_   = true;
                 Interpreter.isRunning = false;
                 Interpreter.onFinish && Interpreter.onFinish();
@@ -319,11 +339,18 @@ var Worker = {
         },
 
         runCallbackInAsyncFunction(data) {
-            if (this.callbacks[data.callback]){
+            if (this.callbacks[data.callback]) {
                 data.res = Array.isArray(data.res) ? data.res : [data.res];
                 runCallback(Interpreter, this.callbacks[data.callback], ...data.res);
                 delete this.callbacks[data.callback];
             }
+        },
+
+        fireEvent(data) {
+            this.eventListeners[data.event] &&
+            this.eventListeners[data.event].forEach((listener)=>{
+                runCallback(Interpreter, listener, ...data.data);
+            });
         }
     }
 };

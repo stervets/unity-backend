@@ -57,6 +57,13 @@ module.exports = Backbone.Model.extend({
         });
     },
 
+    fireEvent(event, data){
+        this.postWorker('fireEvent', {
+            event,
+            data
+        });
+    },
+
     onDestroy() {
         this.room.sendEvent('editor', 'removeActor', this.id);
         this.script.stop(); //TODO check this is needed

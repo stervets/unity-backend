@@ -53,6 +53,16 @@ module.exports = function () {
 
         wait(data, resolve, reject, interpreter) {
             setTimeout(resolve, data[0]);
+        },
+
+        addEventListener(data, resolve, reject, interpreter){
+            this.addEventListener(Interpreter.pseudoToNative(data[0]), data[1]);
+            resolve();
+        },
+
+        removeEventListener(data, resolve, reject, interpreter){
+            this.removeEventListener(Interpreter.pseudoToNative(data[0]), data[1]);
+            resolve();
         }
     }
 };

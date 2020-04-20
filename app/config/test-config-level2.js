@@ -11,8 +11,11 @@ var config = {
     scripts: {
         TankController: {
             content: `
-                move(10);
-                console.log(1111);
+                addEventListener('click', function(x, y){
+                    console.log('>', x, y);
+                    createDummy(x,y, 5);
+                    moveXY(x, y, function(){});
+                });                
             `
         },
 
@@ -115,7 +118,7 @@ var config = {
                     ]
                 },
 
-                moveToXY: {
+                moveXY: {
                     desc  : 'Move vehicle to given coordinates',
                     params: [
                         {

@@ -29,8 +29,8 @@ module.exports = Backbone.Model.extend({
             socket.room = room;
 
             var client = new Clients.prototype.model({
-                id  : socket.id,
-                type: clientProps.type,
+                id         : socket.id,
+                type       : clientProps.type,
                 development: !!clientProps.development
             });
 
@@ -147,10 +147,10 @@ module.exports = Backbone.Model.extend({
             }
         },
 
-        onLevelLoaded(socket, data){
+        onLevelLoaded(socket, data) {
             if (socket.room) {
                 socket.room.sendEvent('editor', 'levelLoaded', {
-                    result: data,
+                    result  : data,
                     metadata: socket.room.config && socket.room.config.metadata
                 });
                 socket.room.isLoadingLevel = false;
@@ -189,6 +189,17 @@ module.exports = Backbone.Model.extend({
                 actor.resolve && actor.resolve(data.res);
             } else {
                 console.log(`Unity response error: Actor ${data.id} not found`);
+            }
+        },
+
+        e(socket, data) {
+            if (socket.room) {
+                var actors = data.id ? [socket.room.actors.get(data.id)] : socket.room.actors.models;
+                actors.forEach((actor) => {
+                    actor && actor.fireEvent(data.event, data.data);
+                });
+            } else {
+                console.warn("Socket has no room");
             }
         },
 
