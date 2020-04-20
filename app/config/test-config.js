@@ -6,8 +6,8 @@
  */
 
 module.exports = {
-    title: 'my super level 1',
-    desc : 'Pick up card and go to the door',
+    name: 'my super level 1',
+    desc : 'Push the button and go to the door',
 
     unity: {
         name    : 'scifi/level1',
@@ -15,12 +15,9 @@ module.exports = {
         manifest: '/o/Unity%2F888283_apple_512x512.png?alt=media&token=2982afd0-7724-4f76-aea3-15234613',
     },
 
-    scripts: [
-        {
-            name   : 'CharacterController',
-            api    : 'Character',
+    scripts: {
+        CharacterController: {
             content: `
-                console.log('X1 = ', x);
                 move(4);
                 turn(2);
                 move(20);
@@ -31,12 +28,10 @@ module.exports = {
                 move(3);
             `
         }
-    ],
+    },
     api    : {
         Character: {
-            //TODO: think about make other functions injection (to another actor?)
             properties: {
-                x        : 'getter:push',
                 DIRECTION: {
                     NONE : 0,
                     RIGHT: 1,

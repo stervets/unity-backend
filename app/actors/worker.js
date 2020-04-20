@@ -189,6 +189,10 @@ var Worker = {
                 param = "{}";
             }
             return param;
+        },
+        function(param, defaultValue) {
+            param == null && (param = defaultValue || null);
+            return param;
         }
     },
 
