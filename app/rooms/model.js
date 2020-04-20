@@ -39,6 +39,9 @@ module.exports = Backbone.Model.extend({
                 this.unityClient.socket.disconnect();
                 this.unityClient.destroy();
             }
+
+            this.editorClient && this.sendEvent('editor', 'unityClientConnected');
+
             this.unityClient = addedCliend;
         }
 

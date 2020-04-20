@@ -11,12 +11,12 @@ var config = {
     scripts: {
         TankController: {
             content: `
-                addEventListener('click', function(x, y){
-                   createDummy(x,y, 5);
-                   moveXY(x,y, function(){
-                        console.log('finished', x, y);
-                   });
-                });            
+                addEventListener('click', function(x,y){
+                    createDummy(x,y);
+                    moveXY(x,y, function(){
+                    
+                    });
+                })       
             `
         },
 
