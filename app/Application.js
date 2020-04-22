@@ -1,12 +1,13 @@
 var Clients        = require('./clients/collection'),
     Rooms          = require('./rooms/collection'),
-    TestUserConfig = require('./config/test-config-level2');
+    TestUserConfig = require('./config/test-config');
 
 module.exports = Backbone.Model.extend({
     rooms  : null,
     prepare: ['initCollections'],
 
-    handlers: {},
+    handlers           : {},
+    feHandlersCallbacks: {},
 
     socketHandlers: {
         register(socket, clientProps) {
@@ -110,7 +111,7 @@ module.exports = Backbone.Model.extend({
                         apiName,
                         api,
                         scriptName: data.script,
-                        autorun   : !!data.autorun
+                        isPublic   : !!data.isPublic
                     });
 
                     console.log(`Actor ${data.name} added. ID: ${data.id}, API: ${apiName}, Script: ${data.script}`);
@@ -127,6 +128,14 @@ module.exports = Backbone.Model.extend({
                 socket.room.loadUnityLevel();
             } else {
                 console.warn("ReloadLevel: Socket has no room");
+            }
+        },
+
+        levelUnloaded(socket, data) {
+            if (socket.room) {
+                data && data.id && this.feHandlersCallbacks[data.id] && this.feHandlersCallbacks[data.id]();
+            } else {
+                console.warn("levelUnloaded: Socket has no room");
             }
         },
 
@@ -244,6 +253,21 @@ module.exports = Backbone.Model.extend({
     feHandlers: {
         test(socket, request) {
             this.sendFrontendResponse(socket, request.id, request.data.a + request.data.b);
+        },
+
+        unloadLevel(socket, request) {
+            if (socket.room) {
+                socket.room.destroyAllActors();
+                socket.room.send('unity', 'unloadLevel', {
+                    id: request.id.toString()
+                });
+                this.feHandlersCallbacks[request.id] = () => {
+                    this.sendFrontendResponse(socket, request.id);
+                    delete this.feHandlersCallbacks[request.id];
+                }
+            } else {
+                console.warn("ReloadLevel: Socket has no room");
+            }
         }
     },
 

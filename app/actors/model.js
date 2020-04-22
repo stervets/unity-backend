@@ -286,6 +286,12 @@ module.exports = Backbone.Model.extend({
         this.state    = STATE.PAUSED;
         var debugData = await this.script.step();
         debugData && console.log(`${debugData.loc.line}:${debugData.loc.column} >`, debugData.scope);
+
+        this.room.sendEvent('editor', 'debugData', {
+            id : this.id,
+            data: debugData
+        });
+
         return debugData;
     },
 
@@ -315,7 +321,7 @@ module.exports = Backbone.Model.extend({
         this.room.sendEvent('editor', 'addActor', _.extend(json,
             { metadata: this.room.metadata[this.get('apiName')] }));
 
-        this.get('autorun') && this.scriptRun();
+        //this.get('autorun') && this.scriptRun();
     }
 })
 ;
