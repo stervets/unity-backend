@@ -54,7 +54,7 @@ module.exports = Backbone.Model.extend({
             if (socket.room) {
                 socket.room.registerAPI(config);
             } else {
-                console.warn("Socket has no room");
+                console.warn("registerAPI: Socket has no room");
             }
         },
 
@@ -91,7 +91,7 @@ module.exports = Backbone.Model.extend({
                     console.warn(`Actor ${data.id} not found`);
                 }
             } else {
-                console.warn("Socket has no room");
+                console.warn("removeActor: Socket has no room");
             }
         },
 
@@ -118,7 +118,7 @@ module.exports = Backbone.Model.extend({
                     console.warn("Room has no config");
                 }
             } else {
-                console.warn("Socket has no room");
+                console.warn("addActor: Socket has no room");
             }
         },
 
@@ -126,7 +126,7 @@ module.exports = Backbone.Model.extend({
             if (socket.room) {
                 socket.room.loadUnityLevel();
             } else {
-                console.warn("Socket has no room");
+                console.warn("ReloadLevel: Socket has no room");
             }
         },
 
@@ -136,7 +136,7 @@ module.exports = Backbone.Model.extend({
                     capture: !!capture
                 });
             } else {
-                console.warn("Socket has no room");
+                console.warn("CaptureKeyboard: Socket has no room");
             }
         },
 
@@ -144,7 +144,7 @@ module.exports = Backbone.Model.extend({
             if (socket.room) {
                 socket.room.runAllScripts(data.except, data.scripts);
             } else {
-                console.warn("Socket has no room");
+                console.warn("RunAllScripts: Socket has no room");
             }
         },
 
@@ -156,7 +156,7 @@ module.exports = Backbone.Model.extend({
                 });
                 socket.room.isLoadingLevel = false;
             } else {
-                console.warn("Socket has no room");
+                console.warn("onLevelLoaded: Socket has no room");
             }
         },
 
@@ -200,7 +200,7 @@ module.exports = Backbone.Model.extend({
                     actor && actor.fireEvent(data.event, data.data);
                 });
             } else {
-                console.warn("Socket has no room");
+                console.warn("Event: Socket has no room");
             }
         },
 
@@ -233,7 +233,7 @@ module.exports = Backbone.Model.extend({
                 console.warn(`Actor ${data.id} not found`);
             }
         } else {
-            console.warn("Socket has no room");
+            console.warn("checkActorAndRun: Socket has no room");
         }
     },
 

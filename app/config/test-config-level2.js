@@ -11,12 +11,20 @@ var config = {
     scripts: {
         TankController: {
             content: `
-                addEventListener('click', function(x,y){
-                    createDummy(x,y);
-                    moveXY(x,y, function(){
-                    
-                    });
-                })       
+             move(10);
+             var nextTurn = function(){
+                turn(-18, function(angle){
+                    console.log('>', angle);
+                    setTimeout(function(){
+                        turn(90, function(angle){
+                            console.log('>>', angle);
+                            setTimeout(nextTurn, 1000); 
+                        });
+                    }, 1000);
+                });
+             }
+             nextTurn();
+               
             `
         },
 
@@ -149,6 +157,12 @@ var config = {
                             name: 'angle',
                             type: 'float',
                             desc: 'Angle'
+                        },
+
+                        {
+                            name: 'callback',
+                            type: 'function',
+                            desc: 'Make move function async and call this function on finish'
                         }
                     ]
                 },
@@ -160,11 +174,16 @@ var config = {
                             name: 'id',
                             type: 'int',
                             desc: 'Object id'
+                        },
+                        {
+                            name: 'callback',
+                            type: 'function',
+                            desc: 'Make move function async and call this function on finish'
                         }
                     ]
                 },
 
-                turnToXY: {
+                turnXY: {
                     desc  : 'Turn vehicle to given coordinates',
                     params: [
                         {
@@ -177,6 +196,11 @@ var config = {
                             name: 'y',
                             type: 'float',
                             desc: 'Y coord'
+                        },
+                        {
+                            name: 'callback',
+                            type: 'function',
+                            desc: 'Make move function async and call this function on finish'
                         }
                     ]
                 },
@@ -188,6 +212,11 @@ var config = {
                             name: 'angle',
                             type: 'float',
                             desc: 'Angle'
+                        },
+                        {
+                            name: 'callback',
+                            type: 'function',
+                            desc: 'Make move function async and call this function on finish'
                         }
                     ]
                 },

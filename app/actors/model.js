@@ -41,7 +41,7 @@ module.exports = Backbone.Model.extend({
 
         log(data) {
             this.room.sendEvent('editor', 'log', {
-                actorId: this.id,
+                id: this.id,
                 type   : data.type,
                 data   : data.params
             });
@@ -109,13 +109,13 @@ module.exports = Backbone.Model.extend({
             console.log(`${errorType} ERROR:`, error.message);
             error.location && console.log(error.location);
             this.room.sendEvent('editor', 'setState', {
-                actorId : this.id,
+                id : this.id,
                 state   : STATE.STOPPED,
                 metadata: this.room.metadata[this.get('apiName')]
             });
 
             this.room.sendEvent('editor', 'log', {
-                actorId : this.id,
+                id : this.id,
                 type    : 2,
                 location: error.location,
                 data    : [`${errorType} ERROR:`, error.message],
@@ -174,7 +174,7 @@ module.exports = Backbone.Model.extend({
 
         run(doNotRun) {
             this.room.sendEvent('editor', 'setState', {
-                actorId : this.id,
+                id : this.id,
                 state   : STATE.RUNNING,
                 metadata: this.room.metadata[this.get('apiName')]
             });
@@ -186,7 +186,7 @@ module.exports = Backbone.Model.extend({
 
         stop() {
             this.room.sendEvent('editor', 'setState', {
-                actorId : this.id,
+                id : this.id,
                 state   : STATE.STOPPED,
                 metadata: this.room.metadata[this.get('apiName')]
             });
@@ -196,7 +196,7 @@ module.exports = Backbone.Model.extend({
 
         resume() {
             this.room.sendEvent('editor', 'setState', {
-                actorId : this.id,
+                id : this.id,
                 state   : STATE.RUNNING,
                 metadata: this.room.metadata[this.get('apiName')]
             });
@@ -206,7 +206,7 @@ module.exports = Backbone.Model.extend({
 
         step() {
             this.room.sendEvent('editor', 'setState', {
-                actorId : this.id,
+                id : this.id,
                 state   : STATE.PAUSED,
                 metadata: this.room.metadata[this.get('apiName')]
             });
