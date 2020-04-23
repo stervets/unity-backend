@@ -286,29 +286,32 @@ module.exports = Backbone.Model.extend({
             return false;
         }
         this.isScriptStepLocked = true;
-        var error;
+
         if (this.state < STATE.RUNNING) {
-            if (error = await this.scriptRun(script, true)) {
-                return error;
+            if (await this.scriptRun(script, true)) {
+                return false;
             }
         }
 
-        this.state    = STATE.PAUSED;
-        var debugData = await this.script.step();
-        debugData && console.log(`${debugData.loc.line}:${debugData.loc.column} >`, debugData.scope);
+        this.state = STATE.PAUSED;
+        (async () => {
+            var debugData = await this.script.step();
+            debugData && console.log(`${debugData.loc.line}:${debugData.loc.column} >`, debugData.scope);
 
-        this.room.sendEvent('editor', 'debugData', {
-            id  : this.id,
-            data: {
-                start : debugData.start,
-                end   : debugData.end,
-                line  : debugData.loc && debugData.loc.line,
-                column: debugData.loc && debugData.loc.column,
-                scope : debugData.scope
-            }
-        });
-        this.isScriptStepLocked = false;
-        return debugData;
+            this.room.sendEvent('editor', 'debugData', {
+                id  : this.id,
+                data: {
+                    start : debugData.start,
+                    end   : debugData.end,
+                    line  : debugData.loc && debugData.loc.line,
+                    column: debugData.loc && debugData.loc.column,
+                    scope : debugData.scope
+                }
+            });
+            this.isScriptStepLocked = false;
+        })();
+
+        return true;
     },
 
     onChangeScriptName() {
