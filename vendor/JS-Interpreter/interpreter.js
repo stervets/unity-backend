@@ -3445,8 +3445,7 @@ Interpreter.prototype['stepContinueStatement'] = function (stack, state, node) {
 };
 
 Interpreter.prototype['stepDebuggerStatement'] = function (stack, state, node) {
-    // Do nothing.  May be overridden by developers.
-    console.log('DEBUGGER!');
+    this.onFireDebugger && this.onFireDebugger();
     stack.pop();
 };
 

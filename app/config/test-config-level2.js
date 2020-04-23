@@ -11,9 +11,10 @@ var config = {
     scripts: {
         TankController: {
             content: `
-             move(10);
              var nextTurn = function(){
-                turn(-18, function(angle){
+                turn(0, function(angle){
+                    console.log('<<');
+                    debugger;
                     console.log('>', angle);
                     setTimeout(function(){
                         turn(90, function(angle){

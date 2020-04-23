@@ -1,6 +1,6 @@
 var Clients        = require('./clients/collection'),
     Rooms          = require('./rooms/collection'),
-    TestUserConfig = require('./config/test-config');
+    TestUserConfig = require('./config/test-config-level2');
 
 module.exports = Backbone.Model.extend({
     rooms  : null,

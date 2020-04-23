@@ -27,8 +27,8 @@ global.runCallback = (interpreter, callback, ...attrs) => {
     params      = params.substr(1, params.length - 2);
     var program = acorn.parse(`(function(){})(${params});`);
     _.extend(program, {
-        end  : callback.node.end,
-        start: callback.node.start,
+        end        : callback.node.end,
+        start      : callback.node.start,
         parentScope: callback.parentScope
     });
 
@@ -76,9 +76,8 @@ global.getParams = (data) => {
 
 var unityResponse = null;
 
- var inspector = require('inspector');
- inspector.open('10220', null, true);
-
+var inspector = require('inspector');
+inspector.open('10220', null, true);
 
 var _interpreterInstance;
 const registerEnvironment = function (environment) {
@@ -157,12 +156,6 @@ var Worker = {
 
     response(id, data) {
         parentPort.postMessage({ com: 'callback', data, id });
-    },
-
-    onDebug(data) {
-        console.log('DEBUG DATA:');
-        console.log("place", data.start, ' - ', data.end);
-        console.log("I = ", data.scope.i);
     },
 
     addEventListener(name, callback) {
@@ -276,8 +269,13 @@ var Worker = {
                 unityResponse && unityResponse();
             };
 
+            Interpreter.onFireDebugger = () => {
+                this.post('fireDebugger');
+            };
+
             Interpreter.onFinish = () => {
-                Interpreter.onFinish = null;
+                Interpreter.onFinish       = null;
+                Interpreter.onFireDebugger = null;
                 this.response(id);
             };
 
@@ -295,18 +293,7 @@ var Worker = {
                 unityResponse && unityResponse();
             }
         },
-        /*
-         pause(data, id) {
-         Interpreter.onDebug = (data) => {
-         // console.log('DEBUG DATA:');
-         // console.log("place", data.start, ' - ', data.end);
-         // console.log("I = ", data.scope.i);
-         this.response(id, data.scope);
-         };
-         //console.log('STOP', Interpreter.paused_);
-         Interpreter.paused  = true;
-         },
-         */
+
         step(data, id) {
             Interpreter.onDebug = (data) => {
                 // console.log('DEBUG DATA:');
@@ -347,7 +334,7 @@ var Worker = {
 
         fireEvent(data) {
             this.eventListeners[data.event] &&
-            this.eventListeners[data.event].forEach((listener)=>{
+            this.eventListeners[data.event].forEach((listener) => {
                 runCallback(Interpreter, listener, ...data.data);
             });
         }
