@@ -315,13 +315,9 @@ module.exports = Backbone.Model.extend({
     },
 
     launch(opts) {
-        var http = require('http').createServer(opts.express);
-        this.io  = require('socket.io')(http);
-
-        this.io.on('connection', this.onConnection);
-
-        http.listen(opts.port, () => {
+        this.io  = require('socket.io').listen(opts.port, () => {
             console.log(`listening on *:${opts.port}`);
         });
+        this.io.sockets.on('connection', this.onConnection);
     }
 });

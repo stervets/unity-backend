@@ -10,8 +10,8 @@ var config = {
 
     scripts: {
         TankController: {
-            content: `
-             move(1);               
+            content: `move(1);
+turn(20);               
             `
         },
 
