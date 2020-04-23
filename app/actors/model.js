@@ -64,10 +64,12 @@ module.exports = Backbone.Model.extend({
     },
 
     fireEvent(event, data) {
-        this.postWorker('fireEvent', {
-            event,
-            data
-        });
+        if (this.state >= STATE.RUNNING) {
+            this.postWorker('fireEvent', {
+                event,
+                data
+            });
+        }
     },
 
     onDestroy() {
