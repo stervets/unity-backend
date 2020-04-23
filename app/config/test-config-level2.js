@@ -10,8 +10,14 @@ var config = {
 
     scripts: {
         TankController: {
-            content: `move(1);
-turn(20);               
+            content: `
+            while(true){
+                var x = random(-20, 20),
+                    y = random(-20, 20);
+                createDummy(x,y);
+                moveXY(x,y);
+                
+            }  
             `
         },
 

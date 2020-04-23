@@ -76,8 +76,11 @@ global.getParams = (data) => {
 
 var unityResponse = null;
 
+/*
 var inspector = require('inspector');
 inspector.open('10220', null, true);
+
+ */
 
 var _interpreterInstance;
 const registerEnvironment = function (environment) {
