@@ -3445,6 +3445,7 @@ Interpreter.prototype['stepContinueStatement'] = function (stack, state, node) {
 };
 
 Interpreter.prototype['stepDebuggerStatement'] = function (stack, state, node) {
+    this.paused_   = true;
     this.onFireDebugger && this.onFireDebugger();
     stack.pop();
 };
