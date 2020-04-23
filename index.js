@@ -1,5 +1,5 @@
 require("./init/init");
 var Application = require("./app/Application");
 new Application({
-    port: 8085
+    port: process.env.SOCKET_PORT || 3000
 });
