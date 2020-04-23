@@ -111,7 +111,7 @@ module.exports = Backbone.Model.extend({
                         apiName,
                         api,
                         scriptName: data.script,
-                        isPublic   : !!data.isPublic
+                        isPublic  : !!data.isPublic
                     });
 
                     console.log(`Actor ${data.name} added. ID: ${data.id}, API: ${apiName}, Script: ${data.script}`);
@@ -315,9 +315,8 @@ module.exports = Backbone.Model.extend({
     },
 
     launch(opts) {
-        this.io  = require('socket.io').listen(opts.port, () => {
-            console.log(`listening on *:${opts.port}`);
-        });
+        this.io = require('socket.io').listen(opts.port);
+        console.log(`listening on *:${opts.port}`);
         this.io.sockets.on('connection', this.onConnection);
     }
 });

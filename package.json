@@ -17,7 +17,6 @@
     "dependencies": {
         "@babel/core": "^7.8.4",
         "@babel/preset-env": "^7.8.4",
-        "JS-Interpreter": "https://github.com/NeilFraser/JS-Interpreter.git",
         "acorn": "^6.2.1",
         "babel-loader": "^8.0.6",
         "backbone": "^1.4.0",
