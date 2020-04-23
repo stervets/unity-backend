@@ -282,6 +282,10 @@ module.exports = Backbone.Model.extend({
     },
 
     async scriptStep(script) {
+        if (this.isScriptStepLocked) {
+            return false;
+        }
+        this.isScriptStepLocked = true;
         var error;
         if (this.state < STATE.RUNNING) {
             if (error = await this.scriptRun(script, true)) {
@@ -303,7 +307,7 @@ module.exports = Backbone.Model.extend({
                 scope : debugData.scope
             }
         });
-
+        this.isScriptStepLocked = false;
         return debugData;
     },
 

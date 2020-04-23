@@ -181,11 +181,13 @@ module.exports = Backbone.Model.extend({
             });
         },
 
+        /*
         ScriptStep(socket, data) {
             this.checkActorAndRun(socket, data, (actor) => {
                 actor.scriptStep(data.script);
             });
         },
+        */
 
         RunCallback(socket, data) {
             this.checkActorAndRun(socket, data, (actor) => {
@@ -253,6 +255,12 @@ module.exports = Backbone.Model.extend({
     feHandlers: {
         test(socket, request) {
             this.sendFrontendResponse(socket, request.id, request.data.a + request.data.b);
+        },
+
+        ScriptStep(socket, request) {
+            this.checkActorAndRun(socket, request.data, async (actor) => {
+                this.sendFrontendResponse(socket, request.id, !!(await actor.scriptStep(request.data.script)));
+            });
         },
 
         unloadLevel(socket, request) {
