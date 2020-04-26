@@ -64,14 +64,14 @@ var config = {
                 var func = function(){
                     var l = random(-1, 1),
                         r = random(-1, 1);
-                    console.log(l, r);
-                    motor(l, r);
+                    console.log(l, l);
+                    motor(l, l);
                     setTimeout(function(){
                         motor(0,0);
                         setTimeout(func, 0);
                     }, 2000);
                 }
-                //func();
+                func();
              
             `
         },

@@ -336,6 +336,7 @@ var Worker = {
         },
 
         fireEvent(data) {
+            data.data = Array.isArray(data.data) ? data.data : [data.data];
             this.eventListeners[data.event] &&
             this.eventListeners[data.event].forEach((listener) => {
                 runCallback(Interpreter, listener, ...data.data);
