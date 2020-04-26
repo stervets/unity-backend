@@ -85,6 +85,12 @@ module.exports = Backbone.Model.extend({
 
         removeActor(socket, data) {
             if (socket.room) {
+                if (data.isStatic) {
+                    socket.room.sendEvent('editor', 'removeActor', {
+                        id: data.id
+                    });
+                    return;
+                }
                 var actor = socket.room.actors.get(data.id);
                 if (actor) {
                     actor.destroy();
@@ -99,6 +105,9 @@ module.exports = Backbone.Model.extend({
         addActor(socket, data) {
             if (socket.room) {
                 if (socket.room.config) {
+                    if (data.isStatic) {
+                        return;
+                    }
                     var apiName = data.api.split('_')[1], api;
                     if (!(api = socket.room.config.api[apiName])) {
                         console.log(`API "${apiName}" not found`);
@@ -182,12 +191,12 @@ module.exports = Backbone.Model.extend({
         },
 
         /*
-        ScriptStep(socket, data) {
-            this.checkActorAndRun(socket, data, (actor) => {
-                actor.scriptStep(data.script);
-            });
-        },
-        */
+         ScriptStep(socket, data) {
+         this.checkActorAndRun(socket, data, (actor) => {
+         actor.scriptStep(data.script);
+         });
+         },
+         */
 
         RunCallback(socket, data) {
             this.checkActorAndRun(socket, data, (actor) => {

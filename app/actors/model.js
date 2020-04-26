@@ -77,7 +77,7 @@ module.exports = Backbone.Model.extend({
             id      : this.id,
             metadata: this.room.metadata[this.get('apiName')]
         });
-        this.script.stop(); //TODO check this is needed
+        //this.script.stop();
         this.worker.terminate();
     },
 
@@ -340,6 +340,7 @@ module.exports = Backbone.Model.extend({
         this.room.sendEvent('editor', 'addActor', _.extend(json,
             { metadata: this.room.metadata[this.get('apiName')] }));
 
+        this.room.isLevelRunning && this.scriptRun();
         //this.get('autorun') && this.scriptRun();
     }
 })

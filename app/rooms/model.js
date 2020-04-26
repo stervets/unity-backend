@@ -22,6 +22,7 @@ module.exports = Backbone.Model.extend({
         if (!this.isLoadingLevel && this.config &&
             (this.unityClient && (this.editorClient || this.unityClient.get('development')))) {
             this.isLoadingLevel = true;
+            this.isLevelRunning = false;
             this.destroyAllActors();
             this.send('unity', 'loadLevel', this.config.unity);
         }
@@ -154,6 +155,7 @@ module.exports = Backbone.Model.extend({
     },
 
     runAllScripts(except, scripts) {
+        this.isLevelRunning = true;
         except  = except || [];
         scripts = scripts || {};
 

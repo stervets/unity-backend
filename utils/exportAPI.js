@@ -2,7 +2,7 @@ var UNITY_PATH = '/Users/lisov/UnityProjects/codify';
 
 var fs      = require('fs');
 var configs = [
-    require('../app/config/test-config'),
+    //require('../app/config/test-config'),
     require('../app/config/test-config-level2'),
 ];
 

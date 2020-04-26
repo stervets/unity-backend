@@ -289,12 +289,17 @@ Interpreter.prototype.step = function () {
  *     false if no more instructions.
  */
 Interpreter.prototype.run = async function () {
+    if (this.isAwaitingNextStep){
+        return;
+    }
     const breakLimit = 6000000;
     var scriptFinished,
         counter      = 0;
     while (!scriptFinished && !this.awaitExternalExecute_) {
         try {
+            this.isAwaitingNextStep = true;
             scriptFinished = !(await this.step());
+            this.isAwaitingNextStep = false;
         } catch (e) {
             this.onRuntimeError && this.onRuntimeError(e);
         }
