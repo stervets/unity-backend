@@ -45,7 +45,7 @@ var config = {
                     cameraSet(-10-cameraZ, 0, (cameraZ-=0.01), 90, 20);
                     
                     // ждем пока камера не опустится до y == 2
-                    if (cameraZ>2){
+                    if (cameraZ>10){
                         setTimeout(moveCamera, 0);
                     }else{
                         console.log('camera follow');

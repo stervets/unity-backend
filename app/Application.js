@@ -47,8 +47,7 @@ module.exports = Backbone.Model.extend({
             if (clientProps.development) {
                 socket.room.registerAPI(TestUserConfig);
             }
-
-            console.log(`Client "${client.get('type')}" in room ${room.id} started`);
+            console.log(`Client "${client.get('type')}" in room ${room.id} started. Socket id: ${socket.id}`);
         },
 
         registerAPI(socket, config) {
