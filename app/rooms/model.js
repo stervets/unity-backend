@@ -146,7 +146,7 @@ module.exports = Backbone.Model.extend({
             api[apiName].properties = api[apiName].properties || {};
             api[apiName].methods    = api[apiName].methods || {};
             api[apiName].extends && (api[apiName] = extend(api[apiName], api[apiName].extends));
-            api[apiName].metadata = metadata;
+            this.metadata[apiName] = api[apiName].metadata = metadata;
         });
 
         if (config.unity) {
