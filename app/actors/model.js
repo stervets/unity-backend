@@ -337,13 +337,11 @@ module.exports = Backbone.Model.extend({
 
         var json = this.toJSON();
         delete json.api;
+
         this.room.sendEvent('editor', 'addActor', _.extend(json,
             { metadata: this.room.metadata[this.get('apiName')] }));
 
         this.room.isLevelRunning && this.scriptRun();
         //this.get('autorun') && this.scriptRun();
     }
-})
-;
-
-
+});

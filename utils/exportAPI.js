@@ -99,6 +99,8 @@ if (fs.statSync(UNITY_PATH).isDirectory()) {
     Level: ${levelName} 
     ${config.desc}
 */
+using UnityEngine;
+
 public class ${filename} : ${extendsApi ? 'API_' + extendsApi : 'ActorController'} {\n`;
 
                 content += Object.keys(methods).map((method) => {

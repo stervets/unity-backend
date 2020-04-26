@@ -204,11 +204,15 @@ module.exports = Backbone.Model.extend({
         },
 
         a(socket, data) {
-            var actor = socket.room.actors.get(data.id);
-            if (actor) {
-                actor.resolve && actor.resolve(data.res);
+            if (socket.room) {
+                var actor = socket.room.actors.get(data.id);
+                if (actor) {
+                    actor.resolve && actor.resolve(data.res);
+                } else {
+                    console.log(`Unity response error: Actor ${data.id} not found`);
+                }
             } else {
-                console.log(`Unity response error: Actor ${data.id} not found`);
+                console.warn("A: Socket has no room");
             }
         },
 

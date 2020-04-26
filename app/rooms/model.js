@@ -110,7 +110,11 @@ module.exports = Backbone.Model.extend({
     },
 
     registerAPI(config) {
-        this.config         = config;
+        if (!(this.config = config)) {
+            console.warn("registerAPI: config is undefined");
+            return;
+        }
+
         this.config.scripts = this.config.scripts || {};
         var api             = (this.config.api = this.config.api || {}),
             loopControl     = 0;
@@ -141,7 +145,7 @@ module.exports = Backbone.Model.extend({
 
         this.metadata = {};
         Object.keys(api).forEach((apiName) => {
-            var metadata = api[apiName].metadata;
+            var metadata            = api[apiName].metadata;
             loopControl             = 0;
             api[apiName].properties = api[apiName].properties || {};
             api[apiName].methods    = api[apiName].methods || {};
@@ -157,10 +161,10 @@ module.exports = Backbone.Model.extend({
 
     runAllScripts(except, scripts) {
         this.isLevelRunning = true;
-        except  = except || [];
-        scripts = scripts || {};
+        except              = except || [];
+        scripts             = scripts || {};
 
-        scripts = Object.keys(scripts).reduce((res, name)=>{
+        scripts = Object.keys(scripts).reduce((res, name) => {
             res[name] = scripts[name].content;
             return res;
         }, {});

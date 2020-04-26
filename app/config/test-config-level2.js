@@ -19,22 +19,22 @@ var config = {
                 console.log('create player tank');
                 
                 // создаем танк x = -5, y = 0, angle = 0, имяСкрипта, группа (прост константа) == 1, isPublic == true
-                var playerTank = createTank(-5,0,0,'TankController',TYPE.FRIEND,true); 
+                var playerTank = createTank('Player Tank', -5,0,0,'TankController',TYPE.FRIEND,true); 
                 
                 console.log('create enemies takns');
                 
                 // создаем ещё танк x = 5, y = 0, angle = -90, имяСкрипта - TankBotController, группа, isPublic == false (default)
-                createTank(5,0,-90,'TankBotController',TYPE.ENEMY);
-                createTank(-5,5,0,'TankBotController',TYPE.ENEMY);
+                createTank('Bot Tank 1', 5,0,-90,'TankBotController',TYPE.ENEMY);
+                createTank('Bot Tank 2', -5,5,0,'TankBotController',TYPE.ENEMY);
                 
                 var cameraZ = 10,
-                    cameraAngle = -90;
+                    cameraAngle = 0;
                 
                 // ф-ция для следования камеры с меняющимся углом раз в 3 секунды
                 var follow = function(){
                     // следовать за объектом
                     // id объекта, дистанция до объекта == 4, угол вращения вокруг объекта
-                    cameraFollow(playerTank, 4, cameraAngle+=90);
+                    cameraFollow(playerTank, 4, cameraAngle);
                     setTimeout(follow, 3000);
                 };
                 
@@ -60,12 +60,19 @@ var config = {
 
         TankController: {
             content: `
-            while(true){
-                var x = random(-20, 20),
-                    y = random(-20, 20);
-                createDummy(x,y);
-                moveXY(x,y);                
-            } 
+            
+                var func = function(){
+                    var l = random(-1, 1),
+                        r = random(-1, 1);
+                    console.log(l, r);
+                    motor(l, r);
+                    setTimeout(function(){
+                        motor(0,0);
+                        setTimeout(func, 0);
+                    }, 2000);
+                }
+                //func();
+             
             `
         },
 
@@ -134,6 +141,11 @@ var config = {
                 createTank: {
                     desc  : 'Create tank. Returns object id',
                     params: [
+                        {
+                            name: 'name',
+                            type: 'string',
+                            desc: 'Tank name (should be unique!)'
+                        },
                         {
                             name: 'x',
                             type: 'float',
