@@ -150,7 +150,7 @@ var config = {
                     ENEMY : 2
                 },
 
-                type: 'getter:getType'
+                types: 'getter:GetTypes'
             },
 
             methods: {
@@ -254,17 +254,17 @@ var config = {
                             desc: 'Object id'
                         },
                         {
-                            name: 'distance',
-                            type: 'float',
-                            desc: 'Distance to object',
+                            name   : 'distance',
+                            type   : 'float',
+                            desc   : 'Distance to object',
                             default: 3
                         },
                         {
-                            name: 'angle',
-                            type: 'float',
-                            desc: 'Camera around',
+                            name   : 'angle',
+                            type   : 'float',
+                            desc   : 'Camera around',
                             default: 0
-                        }                    ]
+                        }]
                 },
 
                 cameraSet: {
@@ -297,6 +297,118 @@ var config = {
                         }
                     ]
                 },
+
+                setPosition: {
+                    desc  : 'Set object position',
+                    params: [
+                        {
+                            name: 'actorId',
+                            type: 'int',
+                            desc: 'Actor id'
+                        },
+                        {
+                            name: 'x',
+                            type: 'float',
+                            desc: 'X coord'
+                        },
+                        {
+                            name: 'y',
+                            type: 'float',
+                            desc: 'X coord'
+                        },
+                        {
+                            name: 'z',
+                            type: 'float',
+                            desc: 'Z coord'
+                        },
+                        {
+                            name: 'angle',
+                            type: 'float',
+                            desc: 'Horizontal angle'
+                        }
+                    ]
+                },
+
+                destroy: {
+                    desc  : 'Destroy object',
+                    params: [
+                        {
+                            name: 'actorId',
+                            type: 'int',
+                            desc: 'Actor id'
+                        }
+                    ]
+                },
+
+                getActor: {
+                    desc  : 'Get actor by id',
+                    params: [
+                        {
+                            name: 'actorId',
+                            type: 'int',
+                            desc: 'Actor id'
+                        }
+                    ]
+                },
+
+                getActors: {
+                    desc  : 'Get actors by types',
+                    params: [
+                        {
+                            name: 'types',
+                            type: 'array',
+                            desc: 'Types'
+                        }
+                    ]
+                },
+
+                damage: {
+                    desc  : 'Add damage to object',
+                    params: [
+                        {
+                            name: 'actorId',
+                            type: 'int',
+                            desc: 'Actor id'
+                        },
+
+                        {
+                            name: 'damage',
+                            type: 'float',
+                            desc: 'Damage amount'
+                        }
+                    ]
+                },
+
+                trigger: {
+                    desc  : 'Send event to object',
+                    params: [
+                        {
+                            name: 'actorId',
+                            type: 'int',
+                            desc: 'Actor id. If actorId == 0, then event will be sent to all actors',
+                        },
+
+                        {
+                            name: 'event',
+                            type: 'string',
+                            desc: 'Event name',
+                        },
+
+                        {
+                            name: 'params',
+                            type: 'array',
+                            desc: 'Parameters'
+                        }
+                    ]
+                },
+
+                finishLevel: {
+                    desc: 'Finish level'
+                },
+
+                resetLevel: {
+                    desc: 'Reset level'
+                }
             }
         },
 
@@ -308,7 +420,7 @@ var config = {
                     y: 'getter:GetY'
                 },
                 health  : 'getter:GetHealth',
-                group   : 'getter:Group',
+                group   : 'getter:GetGroup',
 
                 methods: {
                     scan: {
@@ -341,6 +453,17 @@ var config = {
                                 name: 'id',
                                 type: 'int',
                                 desc: 'Object id'
+                            }
+                        ]
+                    },
+
+                    sendMessage: {
+                        desc  : 'Send message (available by addEventListener("message", function(a,b,c){})',
+                        params: [
+                            {
+                                name: 'params',
+                                type: 'array',
+                                desc: 'Parameters'
                             }
                         ]
                     },

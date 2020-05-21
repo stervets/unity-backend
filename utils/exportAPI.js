@@ -115,7 +115,7 @@ public class ${filename} : ${extendsApi ? 'API_' + extendsApi : 'ActorController
     public virtual void ${method}(`;
 
                     content += (methods[method].params || []).map((param) => {
-                        return `${param.type == 'object' || param.type == 'function' ? 'string' : param.type} ${param.name}`;
+                        return `${~['object', 'function', 'array'].indexOf(param.type) ? 'string' : param.type} ${param.name}`;
                     }).join(', ');
 
                     return content + `) { SendResult(); }\n`;
