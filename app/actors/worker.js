@@ -197,12 +197,22 @@ var Worker = {
             return param == null && defaultValue != null ? !!defaultValue : !!param;
         },
         object(param, defaultValue) {
-            param == null && (param = defaultValue);
+            param == null && (param = defaultValue || {});
+            !_.isObject(param) && (param = {});
             try {
-                typeof param == 'string' && (param = JSON.parse(param));
                 param = JSON.stringify(param);
-            } catch (e) {
+            }catch (e) {
                 param = "{}";
+            }
+            return param;
+        },
+        array(param, defaultValue) {
+            param == null && (param = defaultValue || []);
+            !_.isObject(param) && (param = []);
+            try {
+                param = JSON.stringify(param);
+            }catch (e) {
+                param = "[]";
             }
             return param;
         },
@@ -236,7 +246,7 @@ var Worker = {
                             com : methodName,
                             vars: params.map((param, index) => {
                                 return [
-                                    param.type == 'object' || param.type == 'function' ? 'string' : param.type,
+                                    ~['object', 'function', 'array'].indexOf(param.type) ? 'string' : param.type,
                                     this.validators[param.type] ?
                                     this.validators[param.type].call(this, data[index], param.default) :
                                     null
@@ -337,6 +347,8 @@ var Worker = {
 
         fireEvent(data) {
             data.data = Array.isArray(data.data) ? data.data : [data.data];
+
+            console.log('e>',data);
             this.eventListeners[data.event] &&
             this.eventListeners[data.event].forEach((listener) => {
                 runCallback(Interpreter, listener, ...data.data);

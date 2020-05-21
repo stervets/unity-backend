@@ -11,10 +11,21 @@ var config = {
     scripts: {
         StageController: {
             content: `
+                var playerTank = createTank('Player Tank', -7,-5,-180,'TankController',TYPE.FRIEND,true);
+                
+                createTank('Bot Tank 1', -7,0,-90,'TankBotController',TYPE.ENEMY);
+                createTank('Bot Tank 2', 0, 9,-90,'TankBotController',TYPE.ENEMY);
+                createTank('Bot Tank 3', 7, 0,-90,'TankBotController',TYPE.ENEMY);
+                
+                cameraFollow(playerTank, 5, 30);
+                
+            /*
                 console.log('create wall');
                 for(var i=-5;i<5;i++){
-                    createWall(0,i); //создаем стены
+                    //createWall(0,i); //создаем стены
                 }
+                
+                
                 
                 console.log('create player tank');
                 
@@ -24,17 +35,18 @@ var config = {
                 console.log('create enemies takns');
                 
                 // создаем ещё танк x = 5, y = 0, angle = -90, имяСкрипта - TankBotController, группа, isPublic == false (default)
+                
                 createTank('Bot Tank 1', 5,0,-90,'TankBotController',TYPE.ENEMY);
-                createTank('Bot Tank 2', -5,5,0,'TankBotController',TYPE.ENEMY);
+                
                 
                 var cameraZ = 10,
-                    cameraAngle = 0;
+                    cameraAngle = 30;
                 
                 // ф-ция для следования камеры с меняющимся углом раз в 3 секунды
                 var follow = function(){
                     // следовать за объектом
                     // id объекта, дистанция до объекта == 4, угол вращения вокруг объекта
-                    cameraFollow(playerTank, 4, cameraAngle);
+                    cameraFollow(playerTank, 5, cameraAngle);
                     setTimeout(follow, 3000);
                 };
                 
@@ -55,23 +67,56 @@ var config = {
                 };
                 
                 moveCamera();
+                */
             `
         },
 
         TankController: {
             content: `
-            
+                 var shootTank = function(){
+                 for(var i=0;i<5;i++){
+                    shoot();
+                 }
+                 wait(3000);
+                 }
+                  
+                 //while(true){moveXY(random(-20, 20), random(-20, 20));}
+                 moveXY(-7, -10);
+                 moveXY(0, -10);
+                 moveXY(0, 0);
+                 turn(90);
+                 shootTank();
+                 
+                 turn(180);
+                 shootTank();
+                 
+                 turn(90);
+                 shootTank();
+                 
+                 
+                 while(true){}
+                turn(90);
+                while(true){
+                  shoot();
+                  wait(3000);
+                }
+                
                 var func = function(){
-                    var l = random(-1, 1),
+                    var l = random(-0.5, 0.5),
                         r = random(-1, 1);
-                    console.log(l, l);
+                    //console.log(l, r);
+                    l = l/Math.abs(l);
+                    r = r/Math.abs(r);
+                    console.log(l,r);
                     motor(l, l);
                     setTimeout(function(){
-                        motor(0,0);
+                        //motor(-1,-1);
+                        
                         setTimeout(func, 0);
                     }, 2000);
                 }
                 func();
+                
              
             `
         },
@@ -271,7 +316,7 @@ var config = {
                         params: [
                             {
                                 name: 'type',
-                                type: 'int',
+                                type: 'array',
                                 desc: 'Object type'
                             },
                             {

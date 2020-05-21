@@ -218,7 +218,17 @@ module.exports = Backbone.Model.extend({
 
         e(socket, data) {
             if (socket.room) {
-                var actors = data.id ? [socket.room.actors.get(data.id)] : socket.room.actors.models;
+                var actors;
+                if (data.id){
+                    actors = socket.room.actors.get(data.id);
+                    if (!actors){
+                        console.warn(`Event: Actor ${data.id} not found`);
+                        return;
+                    }
+                    actors = [actors];
+                }else{
+                    actors = socket.room.actors.models;
+                }
                 actors.forEach((actor) => {
                     actor && actor.fireEvent(data.event, data.data);
                 });
