@@ -106,7 +106,7 @@ module.exports = Backbone.Model.extend({
         this.worker.postMessage({ com, data });
     },
 
-    async onWorkerMessage(data, id) {
+    async onWorkerMessage(data) {
         this.workerHandlers[data.com] && this.workerHandlers[data.com].call(this, data.data, data.id);
     },
 

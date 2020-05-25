@@ -100,7 +100,7 @@ if (fs.statSync(UNITY_PATH).isDirectory()) {
     ${config.desc}
 */
 using UnityEngine;
-
+namespace ${levelName.replace(/\//g, '_')} {
 public class ${filename} : ${extendsApi ? 'API_' + extendsApi : 'ActorController'} {\n`;
 
                 content += Object.keys(methods).map((method) => {
@@ -121,7 +121,7 @@ public class ${filename} : ${extendsApi ? 'API_' + extendsApi : 'ActorController
                     return content + `) { SendResult(); }\n`;
                 }).join('');
 
-                content += '}';
+                content += '}\n}';
 
                 fs.writeFileSync(`${path}/${filename}.cs`, content);
             });

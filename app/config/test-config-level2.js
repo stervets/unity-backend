@@ -10,127 +10,15 @@ var config = {
 
     scripts: {
         StageController: {
-            content: `
-                var playerTank = createTank('Player Tank', -7,-5,-180,'TankController',TYPE.FRIEND,true);
-                
-                createTank('Bot Tank 1', -7,0,-90,'TankBotController',TYPE.ENEMY);
-                createTank('Bot Tank 2', 0, 9,-90,'TankBotController',TYPE.ENEMY);
-                createTank('Bot Tank 3', 7, 0,-90,'TankBotController',TYPE.ENEMY);
-                
-                cameraFollow(playerTank, 5, 30);
-                
-            /*
-                console.log('create wall');
-                for(var i=-5;i<5;i++){
-                    //createWall(0,i); //создаем стены
-                }
-                
-                
-                
-                console.log('create player tank');
-                
-                // создаем танк x = -5, y = 0, angle = 0, имяСкрипта, группа (прост константа) == 1, isPublic == true
-                var playerTank = createTank('Player Tank', -5,0,0,'TankController',TYPE.FRIEND,true); 
-                
-                console.log('create enemies takns');
-                
-                // создаем ещё танк x = 5, y = 0, angle = -90, имяСкрипта - TankBotController, группа, isPublic == false (default)
-                
-                createTank('Bot Tank 1', 5,0,-90,'TankBotController',TYPE.ENEMY);
-                
-                
-                var cameraZ = 10,
-                    cameraAngle = 30;
-                
-                // ф-ция для следования камеры с меняющимся углом раз в 3 секунды
-                var follow = function(){
-                    // следовать за объектом
-                    // id объекта, дистанция до объекта == 4, угол вращения вокруг объекта
-                    cameraFollow(playerTank, 5, cameraAngle);
-                    setTimeout(follow, 3000);
-                };
-                
-                // двигаем камеру
-                var moveCamera = function(){
-                    // установить координаты и угол камеры
-                    // x, y, z, угол по горизонтали == 90, угол по вертикали == 20
-                    cameraSet(-10-cameraZ, 0, (cameraZ-=0.01), 90, 20);
-                    
-                    // ждем пока камера не опустится до y == 2
-                    if (cameraZ>10){
-                        setTimeout(moveCamera, 0);
-                    }else{
-                        console.log('camera follow');
-                        // запускаем функцию следования за объектом
-                        follow();
-                    }
-                };
-                
-                moveCamera();
-                */
-            `
+            content: loadScriptSync('StageController')
         },
 
-        TankController: {
-            content: `
-                 var shootTank = function(){
-                 for(var i=0;i<5;i++){
-                    shoot();
-                 }
-                 wait(3000);
-                 }
-                  
-                 //while(true){moveXY(random(-20, 20), random(-20, 20));}
-                 moveXY(-7, -10);
-                 moveXY(0, -10);
-                 moveXY(0, 0);
-                 turn(90);
-                 shootTank();
-                 
-                 turn(180);
-                 shootTank();
-                 
-                 turn(90);
-                 shootTank();
-                 
-                 
-                 while(true){}
-                turn(90);
-                while(true){
-                  shoot();
-                  wait(3000);
-                }
-                
-                var func = function(){
-                    var l = random(-0.5, 0.5),
-                        r = random(-1, 1);
-                    //console.log(l, r);
-                    l = l/Math.abs(l);
-                    r = r/Math.abs(r);
-                    console.log(l,r);
-                    motor(l, l);
-                    setTimeout(function(){
-                        //motor(-1,-1);
-                        
-                        setTimeout(func, 0);
-                    }, 2000);
-                }
-                func();
-                
-             
-            `
+        PlayerTank: {
+            content: loadScriptSync('PlayerTank')
         },
 
-        TankBotController: {
-            content: `
-                /*
-                while(true){
-                    move(5);
-                    motor(1,-1);
-                    wait(1700);
-                }
-                */
-            `
+        BotTank: {
+            content: loadScriptSync('BotTank')
         }
     },
 
@@ -138,19 +26,30 @@ var config = {
         BaseObject: {
             properties: {
                 TYPE: {
-                    ALL   : 0,
+                    ALL     : 0,
                     //
-                    TECH  : 1000,
-                    WALL  : 1001,
+                    TECH    : 1000,
+                    BUILDING: 2000,
                     //
-                    TURRET: 1002,
-                    TANK  : 1003,
+                    TANK    : 1001,
+                    TURRET  : 1002,
                     //
-                    FRIEND: 1,
-                    ENEMY : 2
+                    WALL    : 2001,
+                    TOWER   : 2002,
+                    //
+                    FRIEND  : 1,
+                    ENEMY   : 2
                 },
 
-                types: 'getter:GetTypes'
+                id      : 'getter:GetId',
+                name    : 'getter:GetName',
+                position: {
+                    x: 'getter:GetX',
+                    y: 'getter:GetY'
+                },
+                health  : 'getter:GetHealth',
+                group   : 'getter:GetGroup',
+                types   : 'getter:GetTypes'
             },
 
             methods: {
@@ -241,6 +140,11 @@ var config = {
                             name: 'angle',
                             type: 'float',
                             desc: 'Angle'
+                        },
+                        {
+                            name: 'disablePhysics',
+                            type: 'bool',
+                            desc: 'Make wall static w/o using physics, gravity, etc.'
                         }
                     ]
                 },
@@ -358,6 +262,12 @@ var config = {
                             name: 'types',
                             type: 'array',
                             desc: 'Types'
+                        },
+
+                        {
+                            name: 'addictive',
+                            type: 'bool',
+                            desc: 'Is addictive mode'
                         }
                     ]
                 },
@@ -389,13 +299,13 @@ var config = {
                         },
 
                         {
-                            name: 'event',
+                            name: 'eventName',
                             type: 'string',
                             desc: 'Event name',
                         },
 
                         {
-                            name: 'params',
+                            name: 'vars',
                             type: 'array',
                             desc: 'Parameters'
                         }
@@ -403,7 +313,14 @@ var config = {
                 },
 
                 finishLevel: {
-                    desc: 'Finish level'
+                    desc  : 'Finish level',
+                    params: [
+                        {
+                            name: 'vars',
+                            type: 'object',
+                            desc: 'Parameters'
+                        }
+                    ]
                 },
 
                 resetLevel: {
@@ -413,60 +330,57 @@ var config = {
         },
 
         Technic: {
-            extends   : 'BaseObject',
-            properties: {
-                position: {
-                    x: 'getter:GetX',
-                    y: 'getter:GetY'
+            extends: 'BaseObject',
+            methods: {
+                scan: {
+                    desc  : 'Objects scanner',
+                    params: [
+                        {
+                            name: 'types',
+                            type: 'array',
+                            desc: 'Object type'
+                        },
+                        {
+                            name   : 'angle',
+                            type   : 'float',
+                            desc   : 'Scanner angle',
+                            default: 360
+                        },
+                        {
+                            name   : 'distance',
+                            type   : 'float',
+                            desc   : 'Scanner distance',
+                            default: 1000
+                        },
+
+                        {
+                            name: 'addictive',
+                            type: 'bool',
+                            desc: 'Addictive mode'
+                        },
+                    ]
                 },
-                health  : 'getter:GetHealth',
-                group   : 'getter:GetGroup',
 
-                methods: {
-                    scan: {
-                        desc  : 'Objects scanner',
-                        params: [
-                            {
-                                name: 'type',
-                                type: 'array',
-                                desc: 'Object type'
-                            },
-                            {
-                                name   : 'angle',
-                                type   : 'int',
-                                desc   : 'Scanner angle',
-                                default: 360
-                            },
-                            {
-                                name   : 'distance',
-                                type   : 'float',
-                                desc   : 'Scanner distance',
-                                default: 1000
-                            }
-                        ]
-                    },
+                scanById: {
+                    desc  : 'Objects scanner',
+                    params: [
+                        {
+                            name: 'id',
+                            type: 'int',
+                            desc: 'Object id'
+                        }
+                    ]
+                },
 
-                    scanById: {
-                        desc  : 'Objects scanner',
-                        params: [
-                            {
-                                name: 'id',
-                                type: 'int',
-                                desc: 'Object id'
-                            }
-                        ]
-                    },
-
-                    sendMessage: {
-                        desc  : 'Send message (available by addEventListener("message", function(a,b,c){})',
-                        params: [
-                            {
-                                name: 'params',
-                                type: 'array',
-                                desc: 'Parameters'
-                            }
-                        ]
-                    },
+                sendMessage: {
+                    desc  : 'Send message (available by addEventListener("message", function(a,b,c){})',
+                    params: [
+                        {
+                            name: 'vars',
+                            type: 'array',
+                            desc: 'Parameters'
+                        }
+                    ]
                 }
             }
         },
@@ -512,30 +426,6 @@ var config = {
                     ]
                 },
 
-                moveTo: {
-                    desc  : 'Move vehicle to given object',
-                    params: [
-                        {
-                            name: 'id',
-                            type: 'int',
-                            desc: 'Object id'
-                        },
-
-                        {
-                            name   : 'distance',
-                            type   : 'int',
-                            desc   : 'Stop on specified distance',
-                            default: 2
-                        },
-
-                        {
-                            name: 'callback',
-                            type: 'function',
-                            desc: 'Make move function async and call this function on finish'
-                        }
-                    ]
-                },
-
                 moveXY: {
                     desc  : 'Move vehicle to given coordinates',
                     params: [
@@ -549,6 +439,12 @@ var config = {
                             name: 'y',
                             type: 'float',
                             desc: 'Y coord'
+                        },
+
+                        {
+                            name   : 'distance',
+                            type   : 'float',
+                            desc   : 'Stop on specified distance'
                         },
 
                         {
@@ -568,22 +464,6 @@ var config = {
                             desc: 'Angle'
                         },
 
-                        {
-                            name: 'callback',
-                            type: 'function',
-                            desc: 'Make move function async and call this function on finish'
-                        }
-                    ]
-                },
-
-                turnTo: {
-                    desc  : 'Turn vehicle to given object',
-                    params: [
-                        {
-                            name: 'id',
-                            type: 'int',
-                            desc: 'Object id'
-                        },
                         {
                             name: 'callback',
                             type: 'function',
@@ -628,6 +508,10 @@ var config = {
                             desc: 'Make move function async and call this function on finish'
                         }
                     ]
+                },
+
+                stop: {
+                    desc  : 'Stop any movement and call callback if async motion (move/turn) was called',
                 },
 
                 shoot: {

@@ -107,7 +107,8 @@ module.exports = Backbone.Model.extend({
                     if (data.isStatic) {
                         return;
                     }
-                    var apiName = data.api.split('_')[1], api;
+                    var apiName = data.api.split('.').pop().split('_')[1],
+                        api;
                     if (!(api = socket.room.config.api[apiName])) {
                         console.log(`API "${apiName}" not found`);
                         return;
@@ -219,15 +220,15 @@ module.exports = Backbone.Model.extend({
         e(socket, data) {
             if (socket.room) {
                 var actors;
-                if (data.id){
+                if (data.id) {
                     actors = socket.room.actors.get(data.id);
-                    if (!actors){
+                    if (!actors) {
                         console.warn(`Event: Actor ${data.id} not found`);
                         return;
                     }
                     actors = [actors];
-                }else{
-                    actors = socket.room.actors.models;
+                } else {
+                    actors = data.except ? socket.room.actors.filter((actor) => actor.id !== data.except) : socket.room.actors.models;
                 }
                 actors.forEach((actor) => {
                     actor && actor.fireEvent(data.event, data.data);

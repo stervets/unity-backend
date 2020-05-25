@@ -62,7 +62,7 @@ var Interpreter = function (code, opt_initFunc) {
     var state              = new Interpreter.State(this.ast, this.global);
     state.done             = false;
     this.stateStack        = [state];
-    //this.run();
+    this.run();
     this.value             = undefined;
     // Point at the main program.
     this.ast               = code;
@@ -214,7 +214,7 @@ Interpreter.prototype.REGEXP_THREAD_TIMEOUT = 1000;
  * @param {string|!Object} code Raw JavaScript text or AST.
  */
 Interpreter.prototype.appendCode = function (code, scope) {
-    var state = this.stateStack[0];
+    var state   = this.stateStack[0];
     state.scope = scope || state.scope;
     if (!state || state.node['type'] !== 'Program') {
         throw Error('Expecting original AST to start with a Program node.');
@@ -240,7 +240,7 @@ Interpreter.prototype.appendCode = function (code, scope) {
  * @return {boolean} True if a step was executed, false if no more instructions.
  */
 Interpreter.prototype.step = function () {
-    return new Promise(async (resolve)=>{
+    return new Promise(async (resolve) => {
         var stack = this.stateStack;
         var state = stack[stack.length - 1];
         if (!state) {
@@ -254,8 +254,8 @@ Interpreter.prototype.step = function () {
         }
         try {
             this.currentState = state;
-            var nextState = this.stepFunctions_[type](stack, state, node);
-            if (nextState instanceof Promise){
+            var nextState     = this.stepFunctions_[type](stack, state, node);
+            if (nextState instanceof Promise) {
                 nextState = await nextState;
                 //nextState = null;
             }
@@ -289,7 +289,7 @@ Interpreter.prototype.step = function () {
  *     false if no more instructions.
  */
 Interpreter.prototype.run = async function () {
-    if (this.isAwaitingNextStep){
+    if (this.isAwaitingNextStep) {
         return;
     }
     const breakLimit = 6000000;
@@ -298,7 +298,7 @@ Interpreter.prototype.run = async function () {
     while (!scriptFinished && !this.awaitExternalExecute_) {
         try {
             this.isAwaitingNextStep = true;
-            scriptFinished = !(await this.step());
+            scriptFinished          = !(await this.step());
             this.isAwaitingNextStep = false;
         } catch (e) {
             this.onRuntimeError && this.onRuntimeError(e);
@@ -3357,10 +3357,10 @@ Interpreter.prototype['stepCallExpression'] = function (stack, state, node) {
         } else if (func.nativeFunc) {
             state.value = func.nativeFunc.apply(state.funcThis_, state.arguments_);
         } else if (func.asyncFunc) {
-            var prom = new Promise((resolve)=>{
+            var prom = new Promise((resolve) => {
                 var argsWithCallback = state.arguments_.slice();
-                argsWithCallback.push((value)=>{
-                    state.value             = value;
+                argsWithCallback.push((value) => {
+                    state.value = value;
                     resolve();
                 });
                 func.asyncFunc.apply(state.funcThis_, argsWithCallback);
@@ -3368,22 +3368,22 @@ Interpreter.prototype['stepCallExpression'] = function (stack, state, node) {
 
             return prom;
             /*
-            var thisInterpreter  = this,
-                isAsync          = false;
-            var callback         = function (value) {
-                state.value             = value;
-                thisInterpreter.awaitExternalExecute_ = false;
-                isAsync && thisInterpreter.run();
-            };
-            // Force the argument lengths to match, then append the callback.
-            var argLength        = func.asyncFunc.length - 1;
-            var argsWithCallback = state.arguments_.slice();
-            argsWithCallback.push(callback);
-            this.awaitExternalExecute_ = true;
-            func.asyncFunc.apply(state.funcThis_, argsWithCallback);
-            isAsync = true;
-            return;
-            */
+             var thisInterpreter  = this,
+             isAsync          = false;
+             var callback         = function (value) {
+             state.value             = value;
+             thisInterpreter.awaitExternalExecute_ = false;
+             isAsync && thisInterpreter.run();
+             };
+             // Force the argument lengths to match, then append the callback.
+             var argLength        = func.asyncFunc.length - 1;
+             var argsWithCallback = state.arguments_.slice();
+             argsWithCallback.push(callback);
+             this.awaitExternalExecute_ = true;
+             func.asyncFunc.apply(state.funcThis_, argsWithCallback);
+             isAsync = true;
+             return;
+             */
         } else {
             /* A child of a function is a function but is not callable.  For example:
              var F = function() {};
@@ -3450,7 +3450,7 @@ Interpreter.prototype['stepContinueStatement'] = function (stack, state, node) {
 };
 
 Interpreter.prototype['stepDebuggerStatement'] = function (stack, state, node) {
-    this.paused_   = true;
+    this.paused_ = true;
     this.onFireDebugger && this.onFireDebugger();
     stack.pop();
 };

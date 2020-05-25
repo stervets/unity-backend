@@ -1,6 +1,6 @@
 var environments = {
-    StageController: require('./environments/StageConroller'),
-    CharacterFemale: require('./environments/CharacterFemale'),
+    //StageController: require('./environments/StageConroller'),
+    //CharacterFemale: require('./environments/CharacterFemale'),
 };
 
 _                    = require("lodash");

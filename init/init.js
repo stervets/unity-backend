@@ -125,3 +125,8 @@ global.loadScript = (name) => {
         });
     })
 };
+
+global.loadScriptSync = (name) => {
+    return fs.readFileSync(`app/actors/scripts/${name}.js`, 'utf8');
+};
+

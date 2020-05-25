@@ -3,7 +3,8 @@ module.exports = function () {
         console: {
             log: function (data, resolve) {
                 var params = getParams(data);
-                resolve(console.log.apply(console, getParams(data)));
+                console.log.apply(console, params);
+                resolve();
                 this.post('log', {
                     type: 0,
                     params
@@ -12,7 +13,8 @@ module.exports = function () {
 
             warn: function (data, resolve) {
                 var params = getParams(data);
-                resolve(console.log.apply(console, getParams(data)));
+                console.warn.apply(console, params);
+                resolve();
                 this.post('log', {
                     type: 1,
                     params
@@ -21,7 +23,8 @@ module.exports = function () {
 
             error: function (data, resolve) {
                 var params = getParams(data);
-                resolve(console.log.apply(console, getParams(data)));
+                console.error.apply(console, params);
+                resolve();
                 this.post('log', {
                     type: 2,
                     params
@@ -33,12 +36,20 @@ module.exports = function () {
             resolve(await this.postMessage('getId'));
         },
 
-        random(data, resolve, reject, interpreter) {
+        randomF(data, resolve, reject, interpreter) {
             if (!data[1]) {
                 data[1] = data[0];
                 data[0] = 0;
             }
             resolve(Math.random() * (data[1] - data[0]) + data[0]);
+        },
+
+        random(data, resolve, reject, interpreter) {
+            if (!data[1]) {
+                data[1] = data[0];
+                data[0] = 0;
+            }
+            resolve(Math.round(Math.random() * (data[1] - data[0]) + data[0]));
         },
 
         setTimeout(data, resolve, reject, interpreter) {

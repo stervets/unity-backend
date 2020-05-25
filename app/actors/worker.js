@@ -77,8 +77,8 @@ global.getParams = (data) => {
 var unityResponse = null;
 
 /*
-var inspector = require('inspector');
-inspector.open('10220', null, true);
+ var inspector = require('inspector');
+ inspector.open('10220', null, true);
 
  */
 
@@ -197,21 +197,23 @@ var Worker = {
             return param == null && defaultValue != null ? !!defaultValue : !!param;
         },
         object(param, defaultValue) {
+            param = Interpreter.pseudoToNative(param);
             param == null && (param = defaultValue || {});
             !_.isObject(param) && (param = {});
             try {
                 param = JSON.stringify(param);
-            }catch (e) {
+            } catch (e) {
                 param = "{}";
             }
             return param;
         },
         array(param, defaultValue) {
+            param = Interpreter.pseudoToNative(param);
             param == null && (param = defaultValue || []);
-            !_.isObject(param) && (param = []);
+            !Array.isArray(param) && (param = [param]);
             try {
                 param = JSON.stringify(param);
-            }catch (e) {
+            } catch (e) {
                 param = "[]";
             }
             return param;
@@ -242,17 +244,25 @@ var Worker = {
                 Object.keys(api.methods || {}).reduce((res, methodName) => {
                     var params      = api.methods[methodName].params || [];
                     res[methodName] = async (data, resolve, reject) => {
-                        resolve(await this.postMessage('q', {
-                            com : methodName,
-                            vars: params.map((param, index) => {
-                                return [
-                                    ~['object', 'function', 'array'].indexOf(param.type) ? 'string' : param.type,
-                                    this.validators[param.type] ?
-                                    this.validators[param.type].call(this, data[index], param.default) :
-                                    null
-                                ];
-                            })
-                        }).catch(reject));
+                        var res;
+                        try {
+                            res = await this.postMessage('q', {
+                                com : methodName,
+                                vars: params.map((param, index) => {
+                                    return [
+                                        ~['object', 'function', 'array'].indexOf(param.type) ? 'string' : param.type,
+                                        this.validators[param.type] ?
+                                        this.validators[param.type].call(this, data[index], param.default) :
+                                        null
+                                    ];
+                                })
+                            }).catch(reject);
+                        } catch (e) {
+                            reject();
+                            return;
+                        }
+
+                        resolve(Interpreter.nativeToPseudo(res));
                     };
                     return res;
                 }, {})
@@ -347,8 +357,6 @@ var Worker = {
 
         fireEvent(data) {
             data.data = Array.isArray(data.data) ? data.data : [data.data];
-
-            console.log('e>',data);
             this.eventListeners[data.event] &&
             this.eventListeners[data.event].forEach((listener) => {
                 runCallback(Interpreter, listener, ...data.data);
