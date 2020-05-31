@@ -18,7 +18,7 @@
     "dependencies": {
         "@babel/core": "^7.8.4",
         "@babel/preset-env": "^7.8.4",
-        "acorn": "^6.2.1",
+        "acorn": "^6.4.1",
         "babel-loader": "^8.0.6",
         "backbone": "^1.4.0",
         "backbone-initialize": "https://github.com/stervets/backbone-initialize.git",
