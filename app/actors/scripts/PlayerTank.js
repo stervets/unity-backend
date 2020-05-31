@@ -1,4 +1,5 @@
 //while(true){
+
 var targets = scan([TYPE.ENEMY]);
 console.log(targets.map(function(a){return a.name}));
 

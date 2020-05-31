@@ -21,6 +21,7 @@ var moveNext = function () {
     timer = setTimeout(stop, 5000);
 };
 moveNext();
+
 //fire();
 
 /*

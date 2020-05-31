@@ -115,6 +115,8 @@ module.exports = Backbone.Model.extend({
             return;
         }
 
+        console.log(config);
+
         this.config.scripts = this.config.scripts || {};
         var api             = (this.config.api = this.config.api || {}),
             loopControl     = 0;

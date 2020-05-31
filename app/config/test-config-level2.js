@@ -41,15 +41,59 @@ var config = {
                     ENEMY   : 2
                 },
 
-                id      : 'getter:GetId',
-                name    : 'getter:GetName',
-                position: {
-                    x: 'getter:GetX',
-                    y: 'getter:GetY'
+                id: {
+                    _isHidden: true,
+                    _isGetter: true,
+                    type     : 'int',
+                    desc     : 'Returns object id'
                 },
-                health  : 'getter:GetHealth',
-                group   : 'getter:GetGroup',
-                types   : 'getter:GetTypes'
+
+                name: {
+                    _isGetter: true,
+                    type     : 'string',
+                    desc     : 'Returns object name'
+                },
+
+                position: {
+                    x: {
+                        _isGetter: true,
+                        type     : 'float',
+                        desc     : 'Returns x coord'
+                    },
+
+                    y: {
+                        _isGetter: true,
+                        type     : 'float',
+                        desc     : 'Returns y coord'
+                    },
+
+                    z: {
+                        _isGetter: true,
+                        type     : 'float',
+                        desc     : 'Returns z coord'
+                    },
+                },
+                angle   : {
+                    _isGetter: true,
+                    type     : 'float',
+                    desc     : 'Returns object angle'
+                },
+                health  : {
+                    _isGetter: true,
+                    type     : 'float',
+                    desc     : 'Returns object health'
+                },
+                group   : {
+                    _isGetter: true,
+                    type     : 'int',
+                    desc     : 'Returns object group'
+                },
+                types   : {
+                    _isGetter: true,
+                    _isHidden: true,
+                    type     : 'array',
+                    desc     : 'Returns object types'
+                }
             },
 
             methods: {
@@ -389,7 +433,12 @@ var config = {
             extends   : 'Technic',
             name      : 'My super tank',
             properties: {
-                speed: 'getter:GetSpeed'
+                speed: {
+                    _isGetter: true,
+                    _isHidden: true,
+                    type     : 'float',
+                    desc     : 'Returns tank speed'
+                },
             },
 
             methods: {
@@ -442,9 +491,9 @@ var config = {
                         },
 
                         {
-                            name   : 'distance',
-                            type   : 'float',
-                            desc   : 'Stop on specified distance'
+                            name: 'distance',
+                            type: 'float',
+                            desc: 'Stop on specified distance'
                         },
 
                         {
@@ -511,7 +560,7 @@ var config = {
                 },
 
                 stop: {
-                    desc  : 'Stop any movement and call callback if async motion (move/turn) was called',
+                    desc: 'Stop any movement and call callback if async motion (move/turn) was called',
                 },
 
                 shoot: {
@@ -519,7 +568,27 @@ var config = {
                 }
             }
         }
-    }
+    },
+
+    prefabs: [
+        {
+            prefab  : 'TANK',
+            name    : 'tank01',
+            isPublic: true,
+            config  : {
+                group: 1
+            }
+        },
+
+        {
+            prefab  : 'TANK',
+            name    : 'tank02',
+            isPublic: true,
+            config  : {
+                group: 2
+            }
+        }
+    ]
 };
 
 module.exports = config;

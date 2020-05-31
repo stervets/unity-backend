@@ -15,11 +15,11 @@ var random = (min, max) => {
     return Math.round(Math.random() * (max - min) + min);
 };
 
-if (process.argv[2] == 'true') {
-    console.log('==================== DONT FORGET TO OPEN DEV-TOOLS! =========================');
-    //var inspector = require('inspector');
-    //inspector.open(random(8000, 12000), null, false);
-}
+// if (process.argv[2] == 'true') {
+//     console.log('==================== DONT FORGET TO OPEN DEV-TOOLS! =========================');
+//     //var inspector = require('inspector');
+//     //inspector.open(random(8000, 12000), null, false);
+// }
 
 if (isMainThread) {
     throw new Error(`WORKER SHOULD NOT BE IN MAIN THREAD: ${__filename}`)
@@ -101,11 +101,11 @@ var unityResponse = null;
 var _interpreterInstance;
 const registerEnvironment = function (environment) {
     return function (interpreter, scope) {
-        var register = (environment, scope) => {
+        var register = (environment, scope, path) => {
             Object.keys(environment).forEach((name) => {
-                if (typeof environment[name] == 'object') {
+                if (typeof environment[name] == 'object' && !environment[name]._isGetter) {
                     interpreter.setProperty(scope, name, interpreter.createObjectProto({}));
-                    register(environment[name], scope.properties[name]);
+                    register(environment[name], scope.properties[name], path ? `${path}_${name}` : name);
                 } else {
                     if (typeof environment[name] == 'function') {
                         interpreter.setProperty(scope, name,
@@ -117,23 +117,19 @@ const registerEnvironment = function (environment) {
                                 }, interpreter);
                             }, name));
                     } else {
-                        if (typeof environment[name] == 'string') {
-                            if (!environment[name].indexOf('getter:')) {
-                                let getter = environment[name].slice(7);
-                                interpreter.setProperty(scope, name, JSInterpreter.Interpreter.VALUE_IN_DESCRIPTOR, {
-                                    get: interpreter.createAsyncFunction(async function (...attrs) {
-                                        const callback = attrs.pop();
-                                        callback(await Worker.postMessage('q', {
-                                            com : getter,
-                                            vars: []
-                                        }).catch(() => {
-                                            callback();
-                                        }));
-                                    }, name)
-                                });
-                            } else {
-                                interpreter.setProperty(scope, name, environment[name]);
-                            }
+                        if (typeof environment[name] == 'object') {
+                            let getter = `get_${path ? path + '_' : ''}${name}`;
+                            interpreter.setProperty(scope, name, JSInterpreter.Interpreter.VALUE_IN_DESCRIPTOR, {
+                                get: interpreter.createAsyncFunction(async function (...attrs) {
+                                    const callback = attrs.pop();
+                                    callback(await Worker.postMessage('q', {
+                                        com : getter,
+                                        vars: []
+                                    }).catch(() => {
+                                        callback();
+                                    }));
+                                }, name)
+                            });
                         } else {
                             interpreter.setProperty(scope, name, environment[name]);
                         }
