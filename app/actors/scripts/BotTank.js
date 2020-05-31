@@ -13,7 +13,6 @@ var fire = function(){
 var moveNext = function () {
     var timer = 0;
     moveXY(random(-8, 8), random(-8, 8), 0, function () {
-
         clearTimeout(timer);
         moveNext();
     });

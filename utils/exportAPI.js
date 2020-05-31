@@ -1,5 +1,6 @@
 var UNITY_PATH = '/Users/lisov/UnityProjects/codify';
 
+require("../init/init");
 var fs      = require('fs');
 var configs = [
     //require('../app/config/test-config'),
@@ -47,6 +48,27 @@ var deepCopy      = (obj) => {
         return result;
     };
 
+var validators = {
+    int(param, defaultValue) {
+        return (param == null && defaultValue != null ? parseInt(defaultValue) : parseInt(param)) || 0;
+    },
+    float(param, defaultValue) {
+        return (param == null && defaultValue != null ? parseFloat(defaultValue) : parseFloat(param)) || 0;
+    },
+    string(param, defaultValue) {
+        return (param == null && defaultValue != null ?
+                defaultValue && defaultValue.toString && defaultValue.toString() :
+                param && param.toString && param.toString()) || '';
+    },
+    bool(param, defaultValue) {
+        return param == null && defaultValue != null ? !!defaultValue : !!param;
+    }
+};
+
+var validateType = (type)=>{
+    return ~['object', 'function', 'array'].indexOf(type) ? 'string' : type;
+};
+
 if (fs.statSync(UNITY_PATH).isDirectory()) {
     configs.forEach((config) => {
         var levelName      = config.unity.name;
@@ -76,16 +98,42 @@ if (fs.statSync(UNITY_PATH).isDirectory()) {
 
                 var findGetters = (properties, path) => {
                     path = path || '';
-                    Object.keys(properties).forEach((key) => {
-                        if (typeof properties[key] == 'object') {
-                            findGetters(properties[key], path + key + '.');
-                        } else {
-                            if (typeof properties[key] == 'string' && !properties[key].indexOf('getter:')) {
-                                let getter      = properties[key].slice(7);
+                    Object.keys(properties).forEach((name) => {
+                        if (typeof properties[name] == 'object') {
+                            if (properties[name]._isGetter) {
+                                let pathName      = (path ? path + '_' : '') + name,
+                                    getter = `get_${pathName}`,
+                                    responser = `on_get_${pathName}`,
+                                    setter = `set_${pathName}`,
+                                validatedType = validateType(properties[name].type);
+
                                 methods[getter] = {
-                                    desc  : `Getter for this.${path + key}`,
+                                    desc  : properties[name].desc,
+                                    type   : validatedType,
+                                    content: `return ${JSON.stringify(validators[validatedType](null, properties[name].default))};`,
                                     params: []
                                 };
+
+                                methods[responser] = {
+                                    desc  : `Response ${responser}`,
+                                    content: `SendResult(JSON.@${properties[name].type}(${getter}()));`,
+                                    params: []
+                                };
+
+                                if (!properties[name]._isHidden) {
+                                    methods[setter] = {
+                                        desc   : `Setter ${setter}`,
+                                        type   : validateType(properties[name].type),
+                                        content: `return ${getter}();`,
+                                        params : [{
+                                            name,
+                                            type: properties[name].type,
+                                            desc: properties[name].desc
+                                        }]
+                                    };
+                                }
+                            } else {
+                                findGetters(properties[name], path ? `${path}_${name}` : name);
                             }
                         }
                     });
@@ -112,13 +160,13 @@ public class ${filename} : ${extendsApi ? 'API_' + extendsApi : 'ActorController
                     }).join('');
 
                     content += `    */
-    public virtual void ${method}(`;
+    public virtual ${methods[method].type || 'void'} ${method}(`;
 
                     content += (methods[method].params || []).map((param) => {
-                        return `${~['object', 'function', 'array'].indexOf(param.type) ? 'string' : param.type} ${param.name}`;
+                        return `${validateType(param.type)} ${param.name}`;
                     }).join(', ');
 
-                    return content + `) { SendResult(); }\n`;
+                    return content + `) { ${methods[method].content || 'SendResult();'} }\n`;
                 }).join('');
 
                 content += '}\n}';

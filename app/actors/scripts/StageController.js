@@ -57,7 +57,7 @@ var createAndDestroy = function () {
 //     cameraFollow(tank, 5);
 // });
 
-createTank('Bot2', 0,-10,0, 'TankBotController', TYPE.ENEMY);
+createTank('Bot2', 0,-10,0, 'BotTank', TYPE.ENEMY);
 //createTank('Bot3', -5,0,90, 'TankBotController', TYPE.ENEMY);
 
 //var tank = createTank('PlayerTank', 10,0,-90, 'TankController', TYPE.FRIEND, true);

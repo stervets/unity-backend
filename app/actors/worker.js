@@ -103,9 +103,24 @@ const registerEnvironment = function (environment) {
     return function (interpreter, scope) {
         var register = (environment, scope, path) => {
             Object.keys(environment).forEach((name) => {
-                if (typeof environment[name] == 'object' && !environment[name]._isGetter) {
-                    interpreter.setProperty(scope, name, interpreter.createObjectProto({}));
-                    register(environment[name], scope.properties[name], path ? `${path}_${name}` : name);
+                if (typeof environment[name] == 'object') {
+                    if (environment[name]._isGetter) {
+                        let getter = `on_get_${path ? path + '_' : ''}${name}`;
+                        interpreter.setProperty(scope, name, JSInterpreter.Interpreter.VALUE_IN_DESCRIPTOR, {
+                            get: interpreter.createAsyncFunction(async function (...attrs) {
+                                const callback = attrs.pop();
+                                callback(await Worker.postMessage('q', {
+                                    com : getter,
+                                    vars: []
+                                }).catch(() => {
+                                    callback();
+                                }));
+                            }, name)
+                        });
+                    } else {
+                        interpreter.setProperty(scope, name, interpreter.createObjectProto({}));
+                        register(environment[name], scope.properties[name], path ? `${path}_${name}` : name);
+                    }
                 } else {
                     if (typeof environment[name] == 'function') {
                         interpreter.setProperty(scope, name,
@@ -117,22 +132,7 @@ const registerEnvironment = function (environment) {
                                 }, interpreter);
                             }, name));
                     } else {
-                        if (typeof environment[name] == 'object') {
-                            let getter = `get_${path ? path + '_' : ''}${name}`;
-                            interpreter.setProperty(scope, name, JSInterpreter.Interpreter.VALUE_IN_DESCRIPTOR, {
-                                get: interpreter.createAsyncFunction(async function (...attrs) {
-                                    const callback = attrs.pop();
-                                    callback(await Worker.postMessage('q', {
-                                        com : getter,
-                                        vars: []
-                                    }).catch(() => {
-                                        callback();
-                                    }));
-                                }, name)
-                            });
-                        } else {
-                            interpreter.setProperty(scope, name, environment[name]);
-                        }
+                        interpreter.setProperty(scope, name, environment[name]);
                     }
                 }
             });
