@@ -331,7 +331,6 @@ module.exports = Backbone.Model.extend({
         this.callbacks = {};
         this.room      = this.collection.room;
         this.onChangeScriptName();
-
         this.worker = new Worker('./app/actors/worker.js');
         this.worker.on('message', this.onWorkerMessage);
 

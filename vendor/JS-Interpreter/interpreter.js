@@ -59,9 +59,9 @@ var Interpreter = function (code, opt_initFunc) {
     this.ast        = acorn.parse(this.polyfills_.join('\n'), Interpreter.PARSE_OPTIONS);
     this.polyfills_ = undefined;  // Allow polyfill strings to garbage collect.
     this.stripLocations_(this.ast, undefined, undefined);
-    var state              = new Interpreter.State(this.ast, this.global);
-    state.done             = false;
-    this.stateStack        = [state];
+    var state       = new Interpreter.State(this.ast, this.global);
+    state.done      = false;
+    this.stateStack = [state];
     this.run();
     this.value             = undefined;
     // Point at the main program.
@@ -2174,10 +2174,11 @@ Interpreter.prototype.createNativeFunction =
  * @param {!Function} asyncFunc JavaScript function.
  * @return {!Interpreter.Object} New function.
  */
-Interpreter.prototype.createAsyncFunction = function (asyncFunc) {
+Interpreter.prototype.createAsyncFunction = function (asyncFunc, name) {
     var func       = this.createObjectProto(this.FUNCTION_PROTO);
     func.asyncFunc = asyncFunc;
     asyncFunc.id   = this.functionCounter_++;
+    asyncFunc._name = name;
     this.setProperty(func, 'length', asyncFunc.length,
         Interpreter.READONLY_NONENUMERABLE_DESCRIPTOR);
     return func;

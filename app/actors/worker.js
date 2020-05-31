@@ -7,6 +7,20 @@ const {
       JSInterpreter      = require('../../vendor/JS-Interpreter/interpreter'),
       environmentsConfig = require('./environmentsConfig');
 
+var random = (min, max) => {
+    if (!max) {
+        max = min;
+        min = 0;
+    }
+    return Math.round(Math.random() * (max - min) + min);
+};
+
+if (process.argv[2] == 'true') {
+    console.log('==================== DONT FORGET TO OPEN DEV-TOOLS! =========================');
+    //var inspector = require('inspector');
+    //inspector.open(random(8000, 12000), null, false);
+}
+
 if (isMainThread) {
     throw new Error(`WORKER SHOULD NOT BE IN MAIN THREAD: ${__filename}`)
 }
@@ -14,8 +28,9 @@ if (isMainThread) {
 global.Interpreter = null;
 var Environment    = null;
 
-global.runCallback = (interpreter, callback, ...attrs) => {
+global.runCallback = async (interpreter, callback, ...attrs) => {
     if (!(interpreter && interpreter.stateStack)) {
+
         console.log("Run callback: NO INTERPRETER!");
     }
     if (!callback) {
@@ -23,25 +38,32 @@ global.runCallback = (interpreter, callback, ...attrs) => {
         return;
     }
 
-    var params  = JSON.stringify(attrs);
-    params      = params.substr(1, params.length - 2);
-    var program = acorn.parse(`(function(){})(${params});`);
-    _.extend(program, {
-        end        : callback.node.end,
-        start      : callback.node.start,
-        parentScope: callback.parentScope
-    });
+    var params = JSON.stringify(attrs);
+    params     = params.substr(1, params.length - 2);
+    var program;
 
-    _.extend(program.body[0], {
-        end  : callback.node.end,
-        start: callback.node.start
-    });
+    if (!callback.node && callback.asyncFunc) {
+        program = acorn.parse(`${callback.asyncFunc._name}(${params});`);
+    } else {
+        program = acorn.parse(`(function(){})(${params});`);
 
-    _.extend(program.body[0].expression, {
-        end   : callback.node.end - 1,
-        start : callback.node.start,
-        callee: callback.node
-    });
+        _.extend(program, {
+            end        : callback.node.end,
+            start      : callback.node.start,
+            parentScope: callback.parentScope
+        });
+
+        _.extend(program.body[0], {
+            end  : callback.node.end,
+            start: callback.node.start
+        });
+
+        _.extend(program.body[0].expression, {
+            end   : callback.node.end - 1,
+            start : callback.node.start,
+            callee: callback.node
+        });
+    }
 
     var shouldRun = interpreter.stateStack[0].done;
 
@@ -76,12 +98,6 @@ global.getParams = (data) => {
 
 var unityResponse = null;
 
-/*
- var inspector = require('inspector');
- inspector.open('10220', null, true);
-
- */
-
 var _interpreterInstance;
 const registerEnvironment = function (environment) {
     return function (interpreter, scope) {
@@ -99,7 +115,7 @@ const registerEnvironment = function (environment) {
                                     //TODO: Make reject handler (throwException in interpreter?)
                                     console.warn('Script execution error:', message);
                                 }, interpreter);
-                            }));
+                            }, name));
                     } else {
                         if (typeof environment[name] == 'string') {
                             if (!environment[name].indexOf('getter:')) {
@@ -113,7 +129,7 @@ const registerEnvironment = function (environment) {
                                         }).catch(() => {
                                             callback();
                                         }));
-                                    })
+                                    }, name)
                                 });
                             } else {
                                 interpreter.setProperty(scope, name, environment[name]);
