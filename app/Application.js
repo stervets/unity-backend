@@ -132,6 +132,30 @@ module.exports = Backbone.Model.extend({
             }
         },
 
+        OnActorCreate(socket, data) {
+            if (socket.room) {
+                data && data.id && this.feHandlersCallbacks[data.id] && this.feHandlersCallbacks[data.id]();
+            } else {
+                console.warn("OnActorCreate: Socket has no room");
+            }
+        },
+
+        OnActorDestroy(socket, data) {
+            if (socket.room) {
+                data && data.id && this.feHandlersCallbacks[data.id] && this.feHandlersCallbacks[data.id]();
+            } else {
+                console.warn("OnActorDestroy: Socket has no room");
+            }
+        },
+
+        OnActorSet(socket, data) {
+            if (socket.room) {
+                data && data.id && this.feHandlersCallbacks[data.id] && this.feHandlersCallbacks[data.id]();
+            } else {
+                console.warn("OnActorSet: Socket has no room");
+            }
+        },
+
         ReloadLevel(socket, data) {
             if (socket.room) {
                 socket.room.loadUnityLevel();
@@ -299,17 +323,43 @@ module.exports = Backbone.Model.extend({
             } else {
                 console.warn("ReloadLevel: Socket has no room");
             }
-        }
-    },
+        },
 
-    /*
-     sendClientQuery(client, com, vars) {
-     return new Promise((resolve) => {
-     client.resolve = resolve;
-     client.socket.emit('q', { id: 0, com, vars });
-     });
-     },
-     */
+        ActorCreate(socket, request) {
+            if (socket.room) {
+                console.log('ActorCreate');
+                this.feHandlersCallbacks[request.id] = (res) => {
+                    console.log('ActorCreate RES>', res);
+                    this.sendFrontendResponse(socket, request.id);
+                    delete this.feHandlersCallbacks[request.id];
+                }
+            } else {
+                console.warn("ActorCreate: Socket has no room");
+            }
+        },
+
+        ActorDestroy(socket, request) {
+            if (socket.room) {
+                this.feHandlersCallbacks[request.id] = () => {
+                    this.sendFrontendResponse(socket, request.id);
+                    delete this.feHandlersCallbacks[request.id];
+                }
+            } else {
+                console.warn("ActorDestroy: Socket has no room");
+            }
+        },
+
+        ActorSet(socket, request) {
+            if (socket.room) {
+                this.feHandlersCallbacks[request.id] = () => {
+                    this.sendFrontendResponse(socket, request.id);
+                    delete this.feHandlersCallbacks[request.id];
+                }
+            } else {
+                console.warn("ActorSet: Socket has no room");
+            }
+        },
+    },
 
     sendRoomQuery(socketRoom, actorId, com, vars) {
         var data = {

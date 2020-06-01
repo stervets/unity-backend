@@ -24,7 +24,11 @@ module.exports = Backbone.Model.extend({
             this.isLoadingLevel = true;
             this.isLevelRunning = false;
             this.destroyAllActors();
-            this.send('unity', 'loadLevel', this.config.unity);
+
+            this.send('unity', 'loadLevel', {
+                unity : this.config.unity,
+                actors: this.config.actors
+            });
         }
     },
 
@@ -109,13 +113,63 @@ module.exports = Backbone.Model.extend({
         this.destroyAllActors();
     },
 
+    getActorsConfig(actors) {
+        if (!actors) {
+            return [];
+        }
+
+        return (Array.isArray(actors) ? actors : [actors]).reduce((res, actor) => {
+            if (!_.isObject(actor)) {
+                console.log("getActorsConfig: Wrong actor");
+                return res;
+            }
+
+            if (!actor.prefab) {
+                console.log("getActorsConfig: actor has no prefab name");
+                return res;
+            }
+
+            if (!this.config.api[actor.api]) {
+                console.warn(`Can't find API "${actor.api}" for prefab "${actor.prefab}"`);
+                return res;
+            }
+
+            var config     = flattenObject(actor.config || {}),
+                properties = this.config.api[actor.api].properties;
+
+            config = Object.keys(config).reduce((res, key) => {
+                var getter = deep(properties, key);
+                if (getter && getter._isGetter) {
+                    var validatedType = validateType(getter.type);
+                    res.push([
+                        key.replace(/\./g, '_'),
+                        validatedType,
+                        validators[validatedType](config[key], getter.default)
+                    ]);
+                }
+                return res;
+            }, []);
+
+            res.push(_.extend(actor, {
+                prefab    : actor.prefab.toString(),
+                scriptName: (actor.scriptName || '').toString(),
+                isPublic  : !!actor.isPublic,
+                api       : actor.api.toString(),
+                config,
+                metadata  : JSON.stringify(actor.metadata) || ''
+            }, []));
+
+            return res;
+        }, []);
+    },
+
     registerAPI(config) {
         if (!(this.config = config)) {
             console.warn("registerAPI: config is undefined");
             return;
         }
 
-        console.log(config);
+        this.config = deepCopy(this.config);
 
         this.config.scripts = this.config.scripts || {};
         var api             = (this.config.api = this.config.api || {}),
@@ -154,6 +208,8 @@ module.exports = Backbone.Model.extend({
             api[apiName].extends && (api[apiName] = extend(api[apiName], api[apiName].extends));
             this.metadata[apiName] = api[apiName].metadata = metadata;
         });
+
+        this.config.actors = this.getActorsConfig(this.config.actors);
 
         if (config.unity) {
             this.loadUnityLevel();

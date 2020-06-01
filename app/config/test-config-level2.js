@@ -570,24 +570,39 @@ var config = {
         }
     },
 
-    prefabs: [
+    actors: [
         {
-            prefab  : 'TANK',
-            name    : 'tank01',
-            isPublic: true,
-            config  : {
-                group: 1
-            }
+            prefab    : 'TANK',
+            api       : 'Tank',
+            scriptName: 'BotTank',
+            isPublic  : true,
+            config    : {
+                name    : 'tank01',
+                group   : 1,
+                position: {
+                    x: 3,
+                    y: 3
+                }
+            },
+            metadata  : { somedata: 'tank01111' }
         },
 
         {
-            prefab  : 'TANK',
-            name    : 'tank02',
-            isPublic: true,
-            config  : {
-                group: 2
-            }
-        }
+            prefab    : 'TANK',
+            api       : 'Tank',
+            scriptName: 'BotTank',
+            isPublic  : true,
+            config    : {
+                name    : 'tank02',
+                group   : 2,
+                position: {
+                    x: -1,
+                    y: -1
+                }
+            },
+            metadata  : { somedata: 'tank02222' }
+        },
+
     ]
 };
 
