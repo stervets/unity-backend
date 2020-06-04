@@ -1,3 +1,4 @@
+/*
 var that = this;
 var tanks=[];
 
@@ -59,3 +60,4 @@ var moveCamera = function(){
 };
 
 moveCamera();
+*/

@@ -304,32 +304,22 @@ module.exports = Backbone.Model.extend({
 
         ActorCreate(socket, request) {
             if (socket.room) {
-                console.log(request.data);
-                var actor = socket.room.getActorsProperties(request.data)[0];
+                var metadata = request.data.metadata;
+                var actor    = socket.room.getActorsProperties(request.data)[0];
                 socket.room.send('unity', 'ActorCreate', {
                     id: request.id.toString(),
                     actor
                 });
+
                 this.feHandlersCallbacks[request.id] = (res) => {
                     actor.properties = res.properties;
                     actor            = _.extend(socket.room.parseActorsProperties(actor)[0], {
-                        id      : res.actorId || 0,
-                        metadata: request.data.metadata
+                        id: res.actorId || 0,
+                        metadata
                     });
 
                     this.sendFrontendResponse(socket, request.id, actor);
                     delete this.feHandlersCallbacks[request.id];
-
-                    //actor.properties.position.y = 10;
-                    //actor.properties.position.x = 3;
-                    /*
-                    actor.properties.name = 'Bot2';
-
-                    this.feHandlers.ActorSet.call(this, socket, {
-                        id  : 764583343,
-                        data: actor
-                    });
-                    */
                 };
             } else {
                 console.warn("ActorCreate: Socket has no room");
@@ -344,10 +334,6 @@ module.exports = Backbone.Model.extend({
                 });
 
                 this.feHandlersCallbacks[request.id] = (res) => {
-                    console.log({
-                        result  : res.result,
-                        metadata: request.data.metadata
-                    });
                     this.sendFrontendResponse(socket, request.id, {
                         result  : res.result,
                         metadata: request.data.metadata
@@ -361,7 +347,8 @@ module.exports = Backbone.Model.extend({
 
         ActorSet(socket, request) {
             if (socket.room) {
-                var actor = socket.room.getActorsProperties(request.data)[0];
+                var metadata = request.data.metadata;
+                var actor    = socket.room.getActorsProperties(request.data)[0];
                 socket.room.send('unity', 'ActorSet', {
                     id: request.id.toString(),
                     actor
@@ -370,8 +357,8 @@ module.exports = Backbone.Model.extend({
                 this.feHandlersCallbacks[request.id] = (res) => {
                     if (!res.actor) {
                         this.sendFrontendResponse(socket, request.id, {
-                            actor   : res.actor,
-                            metadata: request.metadata
+                            actor: res.actor,
+                            metadata
                         }, "Actor not found");
                         return;
                     }

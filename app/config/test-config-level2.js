@@ -375,6 +375,13 @@ var config = {
 
         Technic: {
             extends: 'BaseObject',
+            properties: {
+                color: {
+                    _isGetter: true,
+                    type     : 'string',
+                    desc     : 'Hex color: #AABBCC'
+                },
+            },
             methods: {
                 scan: {
                     desc  : 'Objects scanner',
@@ -571,7 +578,7 @@ var config = {
     },
 
     actors: [
-/*
+
         {
             prefab    : 'TANK',
             api       : 'Tank',
@@ -580,6 +587,7 @@ var config = {
             properties    : {
                 name    : 'tank',
                 group   : 1,
+                color: '#FF0000',
                 position: {
                     x: 3,
                     y: 3
@@ -587,7 +595,7 @@ var config = {
             },
             metadata  : { somedata: 'tank01111' }
         },
-
+/*
         {
             prefab    : 'TANK',
             api       : 'Tank',
