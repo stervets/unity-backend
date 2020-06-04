@@ -3326,7 +3326,7 @@ Interpreter.prototype['stepCallExpression'] = function (stack, state, node) {
                 Interpreter.READONLY_DESCRIPTOR);
             state.value = undefined;  // Default value if no explicit return.
             return new Interpreter.State(funcNode['body'], scope);
-        } else if (func.eval) {
+        } else if (func['eval']) {
             var code = state.arguments_[0];
             if (typeof code !== 'string') {
                 // JS does not parse String objects:

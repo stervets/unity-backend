@@ -120,7 +120,8 @@ module.exports = Backbone.Model.extend({
                         apiName,
                         api,
                         scriptName: data.script,
-                        isPublic  : !!data.isPublic
+                        isPublic  : !!data.isPublic,
+                        metadata  : data.metadata || ''
                     });
 
                     console.log(`Actor ${data.name} added. ID: ${data.id}, API: ${apiName}, Script: ${data.script}`);
@@ -132,30 +133,6 @@ module.exports = Backbone.Model.extend({
             }
         },
 
-        OnActorCreate(socket, data) {
-            if (socket.room) {
-                data && data.id && this.feHandlersCallbacks[data.id] && this.feHandlersCallbacks[data.id]();
-            } else {
-                console.warn("OnActorCreate: Socket has no room");
-            }
-        },
-
-        OnActorDestroy(socket, data) {
-            if (socket.room) {
-                data && data.id && this.feHandlersCallbacks[data.id] && this.feHandlersCallbacks[data.id]();
-            } else {
-                console.warn("OnActorDestroy: Socket has no room");
-            }
-        },
-
-        OnActorSet(socket, data) {
-            if (socket.room) {
-                data && data.id && this.feHandlersCallbacks[data.id] && this.feHandlersCallbacks[data.id]();
-            } else {
-                console.warn("OnActorSet: Socket has no room");
-            }
-        },
-
         ReloadLevel(socket, data) {
             if (socket.room) {
                 socket.room.loadUnityLevel();
@@ -164,9 +141,9 @@ module.exports = Backbone.Model.extend({
             }
         },
 
-        levelUnloaded(socket, data) {
+        unityFeResponse(socket, data) {
             if (socket.room) {
-                data && data.id && this.feHandlersCallbacks[data.id] && this.feHandlersCallbacks[data.id]();
+                data && data.id && this.feHandlersCallbacks[data.id] && this.feHandlersCallbacks[data.id](data);
             } else {
                 console.warn("levelUnloaded: Socket has no room");
             }
@@ -327,12 +304,34 @@ module.exports = Backbone.Model.extend({
 
         ActorCreate(socket, request) {
             if (socket.room) {
-                console.log('ActorCreate');
+                console.log(request.data);
+                var actor = socket.room.getActorsProperties(request.data)[0];
+                socket.room.send('unity', 'ActorCreate', {
+                    id: request.id.toString(),
+                    actor
+                });
+                console.log(2, actor);
                 this.feHandlersCallbacks[request.id] = (res) => {
-                    console.log('ActorCreate RES>', res);
-                    this.sendFrontendResponse(socket, request.id);
+                    actor.properties = res.properties;
+                    actor            = _.extend(socket.room.parseActorsProperties(actor)[0], {
+                        id      : res.actorId || 0,
+                        metadata: request.data.metadata
+                    });
+
+                    this.sendFrontendResponse(socket, request.id, actor);
                     delete this.feHandlersCallbacks[request.id];
-                }
+
+                    //actor.properties.position.y = 10;
+                    //actor.properties.position.x = 3;
+                    /*
+                    actor.properties.name = 'Bot2';
+
+                    this.feHandlers.ActorSet.call(this, socket, {
+                        id  : 764583343,
+                        data: actor
+                    });
+                    */
+                };
             } else {
                 console.warn("ActorCreate: Socket has no room");
             }
@@ -340,8 +339,20 @@ module.exports = Backbone.Model.extend({
 
         ActorDestroy(socket, request) {
             if (socket.room) {
-                this.feHandlersCallbacks[request.id] = () => {
-                    this.sendFrontendResponse(socket, request.id);
+                socket.room.send('unity', 'ActorDestroy', {
+                    id     : request.id.toString(),
+                    actorId: request.data.id || 0
+                });
+
+                this.feHandlersCallbacks[request.id] = (res) => {
+                    console.log({
+                        result  : res.result,
+                        metadata: request.data.metadata
+                    });
+                    this.sendFrontendResponse(socket, request.id, {
+                        result  : res.result,
+                        metadata: request.data.metadata
+                    }, !res.result && 'Actor not found');
                     delete this.feHandlersCallbacks[request.id];
                 }
             } else {
@@ -351,10 +362,27 @@ module.exports = Backbone.Model.extend({
 
         ActorSet(socket, request) {
             if (socket.room) {
-                this.feHandlersCallbacks[request.id] = () => {
-                    this.sendFrontendResponse(socket, request.id);
+                var actor = socket.room.getActorsProperties(request.data)[0];
+                socket.room.send('unity', 'ActorSet', {
+                    id: request.id.toString(),
+                    actor
+                });
+
+                this.feHandlersCallbacks[request.id] = (res) => {
+                    if (!res.actor) {
+                        this.sendFrontendResponse(socket, request.id, {
+                            actor   : res.actor,
+                            metadata: request.metadata
+                        }, "Actor not found");
+                        return;
+                    }
+
+                    actor.properties = res.actor;
+                    actor            = socket.room.parseActorsProperties(actor)[0];
+
+                    this.sendFrontendResponse(socket, request.id, actor);
                     delete this.feHandlersCallbacks[request.id];
-                }
+                };
             } else {
                 console.warn("ActorSet: Socket has no room");
             }

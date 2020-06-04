@@ -59,8 +59,6 @@ module.exports = Backbone.Model.extend({
         }
 
         this.loadUnityLevel();
-        //isUnityClient && (this.unityClient = addedCliend);
-        //isEditorClient && (this.editorClient = addedCliend);
     },
 
     addActor(options) {
@@ -113,50 +111,108 @@ module.exports = Backbone.Model.extend({
         this.destroyAllActors();
     },
 
-    getActorsConfig(actors) {
+    getActorsProperties(actors) {
         if (!actors) {
             return [];
         }
 
         return (Array.isArray(actors) ? actors : [actors]).reduce((res, actor) => {
             if (!_.isObject(actor)) {
-                console.log("getActorsConfig: Wrong actor");
+                console.log("getActorsProperties: Wrong actor");
                 return res;
             }
 
             if (!actor.prefab) {
-                console.log("getActorsConfig: actor has no prefab name");
+                console.log("getActorsProperties: actor has no prefab name");
                 return res;
             }
 
             if (!this.config.api[actor.api]) {
-                console.warn(`Can't find API "${actor.api}" for prefab "${actor.prefab}"`);
+                console.warn(`getActorsProperties: Can't find API "${actor.api}" for prefab "${actor.prefab}"`);
                 return res;
             }
 
-            var config     = flattenObject(actor.config || {}),
-                properties = this.config.api[actor.api].properties;
+            var properties    = flattenObject(actor.properties || {}),
+                apiProperties = this.config.api[actor.api].properties;
 
-            config = Object.keys(config).reduce((res, key) => {
-                var getter = deep(properties, key);
-                if (getter && getter._isGetter) {
+            properties = Object.keys(properties).reduce((res, key) => {
+                var getter = deep(apiProperties, key);
+                if (getter && getter._isGetter && !getter._isHidden) {
                     var validatedType = validateType(getter.type);
                     res.push([
                         key.replace(/\./g, '_'),
                         validatedType,
-                        validators[validatedType](config[key], getter.default)
+                        validators[validatedType](properties[key], getter.default)
                     ]);
                 }
                 return res;
             }, []);
 
             res.push(_.extend(actor, {
+                id        : actor.id || 0,
                 prefab    : actor.prefab.toString(),
                 scriptName: (actor.scriptName || '').toString(),
                 isPublic  : !!actor.isPublic,
                 api       : actor.api.toString(),
-                config,
-                metadata  : JSON.stringify(actor.metadata) || ''
+                metadata  : JSON.stringify(actor.metadata),
+                properties
+            }, []));
+            return res;
+        }, []);
+    },
+
+    parseActorsProperties(actors) {
+        if (!actors) {
+            return [];
+        }
+
+        return (Array.isArray(actors) ? actors : [actors]).reduce((res, actor) => {
+            if (!_.isObject(actor)) {
+                console.log("parseActorsProperties: Wrong actor");
+                return res;
+            }
+
+            if (!actor.prefab) {
+                console.log("parseActorsProperties: actor has no prefab name");
+                return res;
+            }
+
+            if (!this.config.api[actor.api]) {
+                console.warn(`parseActorsProperties: Can't find API "${actor.api}" for prefab "${actor.prefab}"`);
+                return res;
+            }
+
+            var properties    = actor.properties || {},
+                apiProperties = this.config.api[actor.api].properties;
+
+            properties = Object.keys(properties).reduce((res, key) => {
+                var pointer = apiProperties,
+                    path    = '';
+                if (~key.indexOf(key)) {
+                    var items = key.split('_'),
+                        item;
+
+                    while (items.length) {
+                        item = (item ? item + '_' : '') + items.shift();
+                        if (pointer[item] && typeof pointer[item] == 'object') {
+                            pointer = pointer[item];
+                            path += (path ? '.' : '') + item;
+                            item    = '';
+                        }
+                    }
+                }
+
+                pointer && pointer._isGetter && !pointer._isHidden && deep(res, path || key, properties[key]);
+
+                return res;
+            }, {});
+
+            res.push(_.extend(actor, {
+                prefab    : actor.prefab.toString(),
+                scriptName: (actor.scriptName || '').toString(),
+                isPublic  : !!actor.isPublic,
+                api       : actor.api.toString(),
+                properties
             }, []));
 
             return res;
@@ -209,7 +265,7 @@ module.exports = Backbone.Model.extend({
             this.metadata[apiName] = api[apiName].metadata = metadata;
         });
 
-        this.config.actors = this.getActorsConfig(this.config.actors);
+        this.config.actors = this.getActorsProperties(this.config.actors);
 
         if (config.unity) {
             this.loadUnityLevel();

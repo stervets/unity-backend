@@ -571,13 +571,14 @@ var config = {
     },
 
     actors: [
+/*
         {
             prefab    : 'TANK',
             api       : 'Tank',
             scriptName: 'BotTank',
             isPublic  : true,
-            config    : {
-                name    : 'tank01',
+            properties    : {
+                name    : 'tank',
                 group   : 1,
                 position: {
                     x: 3,
@@ -592,17 +593,17 @@ var config = {
             api       : 'Tank',
             scriptName: 'BotTank',
             isPublic  : true,
-            config    : {
-                name    : 'tank02',
+            properties: {
+                name    : 'tank',
                 group   : 2,
                 position: {
-                    x: -1,
-                    y: -1
+                    x: -5,
+                    y: -6.1
                 }
             },
             metadata  : { somedata: 'tank02222' }
         },
-
+*/
     ]
 };
 
