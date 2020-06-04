@@ -1,64 +1,61 @@
-var wallLine = function (x, y, len, inverted, double) {
-    return;
-    var x2 = x + len;
-    for (var i = x; i < x2; i++) {
-        inverted ? createWall(i, y) : createWall(y, i);
-        if (double) {
-            inverted ? createWall(i, y) : createWall(y, i);
+var that = this;
+var tanks=[];
+
+var onSelectActor = function(tankID){
+
+    tanks.push(createTank('ENEMY-MY', 0,0,-90,'BotTank',TYPE.ENEMY));
+
+    console.log('STAGECONTROLLER->' + tankID);
+    for(i=0; i<that.tanks.length; i++){
+        if (that.tanks[i] === tankID){
+            that.cameraFollow(tankID, 4, cameraAngle+=90);
         }
     }
 }
+addEventListener('selectActor', onSelectActor);
 
-wallLine(-12, 0, 3, false, true);
-wallLine(9, 0, 3, false, true);
+for(var i=-5;i<5;i++){
+    createWall(0,i * 1.5); //создаем стены
+}
 
-wallLine(-12, 0, 3, true, true);
-wallLine(9, 0, 3, true, true);
+console.log('create player tank');
 
-wallLine(0, -0.2, 2, false, true);
-wallLine(0, 0.75, 2, false, true);
+// создаем танк x = -5, y = 0, angle = 0, имяСкрипта, группа (прост константа) == 1, isPublic == true
+var playerTank = createTank('PLAYER',-10,0,0,'PlayerTank',TYPE.FRIEND,true);
+tanks.push(playerTank);
 
-wallLine(4, 4, 1, false, true);
-wallLine(-4, 4, 1, false, true);
-wallLine(4, -4, 1, false, true);
-wallLine(-4, -4, 1, false, true);
+console.log('create enemies takns');
 
+// создаем ещё танк x = 5, y = 0, angle = -90, имяСкрипта - TankBotController, группа, isPublic == false (default)
+tanks.push(createTank('ENEMY-1', 10,0,-90,'BotTank',TYPE.ENEMY));
+tanks.push(createTank('ENEMY-2', 0,-10,-90,'BotTank',TYPE.ENEMY));
+tanks.push(createTank('ENEMY-3', 0,10,-90,'BotTank',TYPE.ENEMY));
 
-var createAndDestroy = function () {
-    var tank = createTank('Bot2', 0, 0, 0, 'BotTank', TYPE.ENEMY);
-    cameraFollow(tank, 5);
-    setTimeout(function () {
-        damage(tank, 100);
-        setTimeout(createAndDestroy, 3000);
-    }, 5000);
+var cameraZ = 10,
+    cameraAngle = -90;
+
+// ф-ция для следования камеры с меняющимся углом раз в 3 секунды
+var follow = function(){
+    // следовать за объектом
+    // id объекта, дистанция до объекта == 4, угол вращения вокруг объекта
+    cameraFollow(playerTank, 4, cameraAngle+=90);
+    //setTimeout(follow, 3000);
 };
-//createAndDestroy();
 
-//cameraSet(0,-5,5,0,30);
+// двигаем камеру
+var moveCamera = function(){
+    // установить координаты и угол камеры
+    // x, y, z, угол по горизонтали == 90, угол по вертикали == 20
+    cameraSet(-10-cameraZ, 0, (cameraZ-=0.1), 90, 20);
 
+    // ждем пока камера не опустится до y == 2
+    if (cameraZ>2){
+        setTimeout(moveCamera, 0);
+    }else{
+        console.log('camera follow');
+        // запускаем функцию следования за объектом
+        follow();
+    }
+};
 
-//var tank = createTank('Bot2', 0, 0, 0, 'BotTank', TYPE.ENEMY);
-//cameraFollow(tank, 4);
-
-//createTank('Bot1', 3,10,-90, 'BotTank', TYPE.ENEMY);
-//var tank = createTank('Bot2', -3,-10,90, 'BotTank', TYPE.ENEMY);
-
-//createTank('Bot3', 3,-10,70, 'BotTank', TYPE.ENEMY);
-
-// var tank;
-// for(var i=0;i<5;i++) {
-//     tank = createTank('Bot' + i, random(-10, 10), random(-10, 10), 0, 'BotTank', TYPE.ENEMY);
-// }
-//
-// cameraFollow(tank, 5);
-// //
-// addEventListener("actorDestroyed", function(){
-//     var tank = createTank('Bot'+random(0xFFFFFF), random(-8, 8), random(-8, 8),180, 'BotTank', TYPE.ENEMY);
-//     cameraFollow(tank, 5);
-// });
-
-createTank('Bot2', 0,0,0, 'BotTank', TYPE.ENEMY);
-//createTank('Bot3', -5,0,90, 'TankBotController', TYPE.ENEMY);
-
-//var tank = createTank('PlayerTank', 10,0,-90, 'TankController', TYPE.FRIEND, true);
-//cameraFollow(tank, 5);
+moveCamera();

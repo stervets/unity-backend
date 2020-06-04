@@ -1,12 +1,9 @@
-//while(true){
+console.log("HERE");
+while(true){
 
-var targets = scan([TYPE.ENEMY]);
-console.log(targets.map(function(a){return a.name}));
-
-setTimeout(function(){
-    sendMessage("Hi!");
-    console.log("sent");
-}, 1000);
-
-
-//}
+    var x = random(-20, 20),
+        y = random(-20, 20);
+    console.log(x,y);
+    createDummy(x,y);
+    moveXY(x,y);
+}
