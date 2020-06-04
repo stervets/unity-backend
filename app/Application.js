@@ -310,7 +310,6 @@ module.exports = Backbone.Model.extend({
                     id: request.id.toString(),
                     actor
                 });
-                console.log(2, actor);
                 this.feHandlersCallbacks[request.id] = (res) => {
                     actor.properties = res.properties;
                     actor            = _.extend(socket.room.parseActorsProperties(actor)[0], {
