@@ -23,7 +23,7 @@
         "backbone": "^1.4.0",
         "backbone-initialize": "https://github.com/stervets/backbone-initialize.git",
         "backbone.radio": "^2.0.0",
-        "lodash": "^4.17.15",
+        "lodash": "^4.17.19",
         "socket.io": "^2.2.0",
         "socket.io-client": "^2.3.0"
     },
