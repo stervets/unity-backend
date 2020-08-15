@@ -111,6 +111,23 @@ module.exports = Backbone.Model.extend({
         this.destroyAllActors();
     },
 
+    getApiGetters(props, path = '') {
+        var res = {},
+            validatedType;
+
+        Object.keys(props).forEach((key) => {
+            if (props[key]._isGetter && !props[key]._isHidden) {
+                validatedType   = validateType(props[key].type);
+                res[path + key] = [validatedType, validators[validatedType](props[key].default)];
+            } else {
+                if (typeof props[key] == 'object') {
+                    _.extend(res, this.getApiGetters(props[key], path + key + '_'));
+                }
+            }
+        });
+        return res;
+    },
+
     getActorsProperties(actors) {
         if (!actors) {
             return [];
@@ -138,15 +155,21 @@ module.exports = Backbone.Model.extend({
             properties = Object.keys(properties).reduce((res, key) => {
                 var getter = deep(apiProperties, key);
                 if (getter && getter._isGetter && !getter._isHidden) {
-                    var validatedType = validateType(getter.type);
-                    res.push([
-                        key.replace(/\./g, '_'),
+                    var validatedType            = validateType(getter.type);
+                    res[key.replace(/\./g, '_')] = [
                         validatedType,
                         validators[validatedType](properties[key], getter.default)
-                    ]);
+                    ];
                 }
                 return res;
-            }, []);
+            }, {});
+
+            apiProperties = this.getApiGetters(apiProperties);
+            properties    = Object.keys(apiProperties).map((key) => {
+                var target = properties[key] || apiProperties[key];
+                return [key, target[0], target[1]];
+            });
+            console.log(properties);
 
             res.push(_.extend(actor, {
                 id        : actor.id || 0,
@@ -267,6 +290,7 @@ module.exports = Backbone.Model.extend({
 
         this.config.actors = this.getActorsProperties(this.config.actors);
 
+        console.log('>', this.config.actors[0].properties);
         if (config.unity) {
             this.loadUnityLevel();
             console.log(`Config ${config.unity.name} loaded`);

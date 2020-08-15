@@ -1,3 +1,29 @@
+
+for(var i=-3;i<3;i++){
+    //createWall(0,i * 1.5); //создаем стены
+}
+
+
+addEventListener('AreaEnter', function(e){
+    console.log('ENTER:', e);
+
+});
+
+addEventListener('AreaExit', function(e){
+    console.log('EXIT:', e);
+});
+
+// for(var i=-5;i<5;i++){
+//     createWall(3,i * 1.5); //создаем стены
+// }
+
+//var enemy = createTank('ENEMY!!!', 0, 0, 90,'BotTank', TYPE.ENEMY);
+
+//var playerTank = createTank('PLAYER', -10, 0, -90,'PlayerTank', TYPE.FRIEND);
+
+//cameraFollow(playerTank, 5, 30);
+
+
 /*
 var that = this;
 var tanks=[];

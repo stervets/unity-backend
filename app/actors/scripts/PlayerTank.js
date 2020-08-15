@@ -1,9 +1,13 @@
-console.log("HERE");
-while(true){
+var enemies = scan([TYPE.TANK], 360, 1000, false);
 
-    var x = random(-20, 20),
-        y = random(-20, 20);
-    console.log(x,y);
-    createDummy(x,y);
-    moveXY(x,y);
+if (enemies.length){
+    turnXY(enemies[0].x, enemies[0].y);
+
+    while(true){
+        shoot();
+        wait(1000);
+    }
+
+}else{
+    console.log('ENEMY NOT FOUND!');
 }

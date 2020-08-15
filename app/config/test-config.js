@@ -19,13 +19,15 @@ module.exports = {
         CharacterController: {
             content: `
                 move(4);
-                turn(2);
-                move(20);
-                push();
-                turn(3);
+                turn(DIRECTION.RIGHT);
                 move(2);
-                turn(2);
-                move(3);
+                turn(DIRECTION.BACK);
+                move(4);
+                push();
+                turn(DIRECTION.BACK);
+                move(2);
+                turn(DIRECTION.LEFT);
+                move(10);
             `
         }
     },

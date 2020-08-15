@@ -1,26 +1,49 @@
-var points = [
-    [3, 3],
-    [-3, -3],
-    [-3, 3],
-    [3, -3]
-];
+var pos = position;
 
-var fire = function(){
-    shoot();
-    setTimeout(fire, 1000);
-};
+var col  = 0,
+    toSet = '';
+var func = function () {
+    col >= 255 && (col = 0);
+    toSet = '#' + (col++).toString(16).toUpperCase() + '0000';
+    console.log(toSet);
+    color = '#00FF00';
 
-var moveNext = function () {
-    var timer = 0;
-    moveXY(random(-8, 8), random(-8, 8), 0, function () {
-        clearTimeout(timer);
-        moveNext();
-    });
+    setTimeout(func, 100);
+}
 
-    timer = setTimeout(stop, 5000);
-};
-moveNext();
-console.log(color);
+
+color = '#00FF00';
+func();
+
+//move(10);
+//turnXY(pos.x, pos.y);
+//move(10);
+
+/*
+ var points = [
+ [3, 3],
+ [-3, -3],
+ [-3, 3],
+ [3, -3]
+ ];
+
+ var fire = function(){
+ shoot();
+ setTimeout(fire, 1000);
+ };
+
+ var moveNext = function () {
+ var timer = 0;
+ moveXY(random(-8, 8), random(-8, 8), 0, function () {
+ clearTimeout(timer);
+ moveNext();
+ });
+
+ timer = setTimeout(stop, 5000);
+ };
+ moveNext();
+ console.log(color);
+ */
 //fire();
 
 /*
