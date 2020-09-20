@@ -58,7 +58,8 @@ var config = {
                     x: {
                         _isGetter: true,
                         type     : 'float',
-                        desc     : 'Returns x coord'
+                        desc     : 'Returns x coord',
+                        default: 0
                     },
 
                     y: {
@@ -82,12 +83,13 @@ var config = {
         },
 
         GameObject: {
-            extends: 'BaseObject',
+            extends   : 'BaseObject',
             properties: {
                 health: {
                     _isGetter: true,
                     type     : 'float',
-                    desc     : 'Returns object health'
+                    desc     : 'Returns object health',
+                    default  : 100
                 },
                 group : {
                     _isGetter: true,
@@ -101,7 +103,7 @@ var config = {
                     desc     : 'Returns object types'
                 }
             },
-            methods: {
+            methods   : {
                 createDummy: {
                     desc  : 'Create dummy object on given coordinates',
                     params: [
@@ -492,7 +494,7 @@ var config = {
                     desc     : 'Returns tank speed'
                 },
             },
-            methods: {
+            methods   : {
                 motor: {
                     desc  : 'Motor direct control',
                     params: [
@@ -626,7 +628,8 @@ var config = {
                 isPhysicsEnabled: {
                     _isGetter: true,
                     type     : 'bool',
-                    desc     : 'Is physics enabled'
+                    desc     : 'Is physics enabled',
+                    default  : true
                 },
 
                 isDestructable: {
@@ -638,7 +641,8 @@ var config = {
                 color: {
                     _isGetter: true,
                     type     : 'string',
-                    desc     : 'Hex color: #AABBCC'
+                    desc     : 'Hex color: #AABBCC',
+                    default  : '#707070'
                 }
             },
         }
@@ -646,10 +650,22 @@ var config = {
 
     actors: [
         {
+            prefab    : 'Wall',
+            api       : 'Wall',
+            properties: {
+                name    : 'TestWall',
+                position: {
+                    x: 0,
+                    y: 0
+                },
+                color: '#FFA0FF'
+            },
+            metadata  : { somedata: 'tank02222' }
+        },
+        /*
+        {
             prefab    : 'Area',
             api       : 'Area',
-            //scriptName: 'BotTank',
-            //isPublic  : true,
             properties: {
                 name    : 'exitArea',
                 position: {
@@ -669,6 +685,32 @@ var config = {
             },
             metadata  : { somedata: 'tank02222' }
         },
+        */
+
+        /*
+         {
+         prefab    : 'Area',
+         api       : 'Area',
+         properties: {
+         name    : 'exitArea',
+         position: {
+         x: 3,
+         y: 3
+         },
+
+         color: '#00FFFF',
+
+         hidden: false,
+
+         scale: {
+         //x: 10,
+         y: 10,
+         //z: 5
+         }
+         },
+         metadata  : { somedata: 'tank02222' }
+         },
+         */
 
         {
             prefab    : 'TANK',
@@ -680,45 +722,11 @@ var config = {
                 group   : 1,
                 color   : '#c8d8d4',
                 position: {
-                    x: 0,
-                    y: -10
+                    x: 5,
+                    y: -5
                 }
             }
         }
-        /*
-         {
-         prefab    : 'TANK',
-         api       : 'Tank',
-         scriptName: 'BotTank',
-         isPublic  : true,
-         properties    : {
-         name    : 'tank',
-         group   : 1,
-         color: '#FF0000',
-         position: {
-         x: 3,
-         y: 3
-         }
-         },
-         metadata  : { somedata: 'tank01111' }
-         },
-         /*
-         {
-         prefab    : 'TANK',
-         api       : 'Tank',
-         scriptName: 'BotTank',
-         isPublic  : true,
-         properties: {
-         name    : 'tank',
-         group   : 2,
-         position: {
-         x: -5,
-         y: -6.1
-         }
-         },
-         metadata  : { somedata: 'tank02222' }
-         },
-         */
     ]
 };
 

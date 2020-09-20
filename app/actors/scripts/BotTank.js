@@ -1,23 +1,8 @@
 var pos = position;
 
-var col  = 0,
-    toSet = '';
-var func = function () {
-    col >= 255 && (col = 0);
-    toSet = '#' + (col++).toString(16).toUpperCase() + '0000';
-    console.log(toSet);
-    color = '#00FF00';
-
-    setTimeout(func, 100);
-}
-
-
-color = '#00FF00';
-func();
-
-//move(10);
-//turnXY(pos.x, pos.y);
-//move(10);
+move(10);
+turnXY(pos.x, pos.y);
+move(10);
 
 /*
  var points = [
