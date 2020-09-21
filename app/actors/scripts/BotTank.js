@@ -1,8 +1,9 @@
 var pos = position;
 
-move(10);
-turnXY(pos.x, pos.y);
-move(10);
+while(true){
+    shoot();
+    wait(2000);
+}
 
 /*
  var points = [

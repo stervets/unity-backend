@@ -653,15 +653,19 @@ var config = {
             prefab    : 'Wall',
             api       : 'Wall',
             properties: {
+                health: 30,
                 name    : 'TestWall',
+                isDestructable: true,
                 position: {
                     x: 0,
-                    y: 0
+                    y: 0,
+                    z: 0
                 },
                 color: '#FFA0FF'
             },
             metadata  : { somedata: 'tank02222' }
         },
+
         /*
         {
             prefab    : 'Area',
@@ -712,6 +716,7 @@ var config = {
          },
          */
 
+
         {
             prefab    : 'TANK',
             api       : 'Tank',
@@ -722,7 +727,7 @@ var config = {
                 group   : 1,
                 color   : '#c8d8d4',
                 position: {
-                    x: 5,
+                    x: 0,
                     y: -5
                 }
             }
